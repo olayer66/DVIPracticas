@@ -21,18 +21,34 @@ MemoryGame = function(gs) {
     this.initGame=function(){
           var sp=['8-ball','potato','dinosaur','kronos','rocket','unicorn','guy','zeppelin'];
         
-        for(i=0; i<sp.size(); i++){
+        //Se rellena el array de cartas con 2 cartas de cada tipo
+        for(i=0; i<sp.length; i++){
              this.cartas[i]= new MemoryGameCard(sp[i]);
-             this.cartas[sp.size()+i]= new MemoryGameCard(sp[i]);
+             this.cartas[sp.length+i]= new MemoryGameCard(sp[i]);
+        }
+
+        //Se barajean las cartas
+        var j, x, i;
+        for (i =  this.cartas.length - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * (i + 1));
+            x =  this.cartas[i];
+            this.cartas[i] =  this.cartas[j];
+            this.cartas[j] = x;
         }
         
-        for(i=0; i<16; i++){
-            this.gs.draw(this.cartas[i].id,i);
-          }
+        //Pintamos para ver si inicio bien
+        this.draw();
+        
     };
     //Funcion de dibujo
     this.draw=function(){
-        
+        //Se pinta el header
+        //----
+
+        //Se pinta el tablero
+        for(i=0; i<16; i++){
+            this.gs.draw(this.cartas[i].id,i);
+        }
     };
     //Funcion del bucle de juego
     this.loop=function(){
@@ -60,19 +76,19 @@ MemoryGameCard = function(id) {
     //Funcion que da la vuelta a la carta
     this.flip=function(){
         //Si la carta esta boca a bajo
-        if(estado===0){
-            estado=1;
+        if(this.estado===0){
+            this.estado=1;
         }else{
-            estado=0;
+            this.estado=0;
         }
     };
     //Cambia el estado  a encontrada
     this.found=function(){
-        estado=2;
+        this.estado=2;
     };
     
     //Metodo que compara la carta con la pasada por referencia
     this.compareTo=function (otherCard){
-        return id===otherCard.id;
+        return this.id===otherCard.id;
     };
 };
