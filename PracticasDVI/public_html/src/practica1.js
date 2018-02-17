@@ -47,7 +47,10 @@ MemoryGame = function(gs) {
 
         //Se pinta el tablero
         for(i=0; i<16; i++){
-            this.gs.draw(this.cartas[i].id,i);
+            if(this.cartas[i].estado===0)
+                this.gs.draw("back",i);
+            else
+                this.gs.draw(this.cartas[i].id,i);
         }
     };
     //Funcion del bucle de juego
@@ -56,7 +59,8 @@ MemoryGame = function(gs) {
     };
     //Funcion que realiza la acciones al seleccionar una carta
     this.onClick=function (cardId){
-        
+        this.cartas[cardId].flip();
+        this.draw();
     };
 };
 
