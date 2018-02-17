@@ -16,6 +16,8 @@ MemoryGame = function(gs) {
     //Numero de cartas encontradas
     this.nEncontradas=0;
     this.gs=gs;
+    //primera carta seleccionada de las dos necesarias para formar pareja al clickear
+    this.selected=null;
   
     //Funcion que inicia el juego
     this.initGame=function(){
@@ -38,12 +40,12 @@ MemoryGame = function(gs) {
         
         //Pintamos para ver si inicio bien
         this.draw();
-        
     };
     //Funcion de dibujo
     this.draw=function(){
         //Se pinta el header
-        //----
+        if(this.nEncontradas<this.cartas.length) gs.drawMessage("MemoryGameCard");
+        else gs.drawMessage("HAS GANADO");
 
         //Se pinta el tablero
         for(i=0; i<16; i++){
@@ -56,14 +58,42 @@ MemoryGame = function(gs) {
     //Funcion del bucle de juego
     this.loop=function(){
         
+
     };
     //Funcion que realiza la acciones al seleccionar una carta
     this.onClick=function (cardId){
-        this.cartas[cardId].flip();
+       
+
+        if(this.selected==null && this.cartas[cardId].estado===0){//si es la primera de las dos cartas que
+            this.cartas[cardId].flip();
+            this.selected= this.cartas[cardId];
+        }else if(this.cartas[cardId].estado===0){ //si no pulsa una carta boca arriba
+            this.cartas[cardId].flip();
+           
+            //TO_DO: meter delay aqui para que se muestre por un rato la carta pulsada (si tiene que ser asi)
+            //--
+
+            if(this.cartas[cardId].compareTo(this.selected)){//si son iguales se dejan boca arriba actualizando el estado
+                this.cartas[cardId].found();
+                this.selected.found();
+                this.nEncontradas=+2;
+            } 
+            else{//si no, se las deja boca abajo
+                this.selected.flip();
+                this.cartas[cardId].flip();
+            }
+            this.selected=null;
+
+        }
+       
         this.draw();
     };
-};
 
+
+    function solve(cardId){
+       
+    };
+};
 
 
 /**
