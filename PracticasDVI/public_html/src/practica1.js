@@ -28,18 +28,7 @@ MemoryGame = function(gs) {
              this.cartas[i]= new MemoryGameCard(sp[i]);
              this.cartas[sp.length+i]= new MemoryGameCard(sp[i]);
         }
-
-        //Se barajean las cartas
-        var j, x, i;
-        for (i =  this.cartas.length - 1; i > 0; i--) {
-            j = Math.floor(Math.random() * (i + 1));
-            x =  this.cartas[i];
-            this.cartas[i] =  this.cartas[j];
-            this.cartas[j] = x;
-        }
-        
-        //Pintamos para ver si inicio bien
-        this.draw();
+        this.loop();
     };
     //Funcion de dibujo
     this.draw=function(){
@@ -57,14 +46,29 @@ MemoryGame = function(gs) {
     };
     //Funcion del bucle de juego
     this.loop=function(){
-        
-
+         //Se barajean las cartas
+        var j, x, i;
+        for (i =  this.cartas.length - 1; i > 0; i--) {
+            j = Math.floor(Math.random() * (i + 1));
+            x =  this.cartas[i];
+            this.cartas[i] =  this.cartas[j];
+            this.cartas[j] = x;
+        }
+        var intervalId;
+        var encontradas=this.nEncontradas;
+        var prueba=function (){
+            console.log("paso por aqui");
+            if(encontradas===8)
+                clearInterval(intervalId);
+        };
+        //Iniciamos el bucle cada segundo
+        intervalId = setInterval(prueba, 1000);
     };
     //Funcion que realiza la acciones al seleccionar una carta
     this.onClick=function (cardId){
        
 
-        if(this.selected==null && this.cartas[cardId].estado===0){//si es la primera de las dos cartas que
+        if(this.selected===null && this.cartas[cardId].estado===0){//si es la primera de las dos cartas que
             this.cartas[cardId].flip();
             this.selected= this.cartas[cardId];
         }else if(this.cartas[cardId].estado===0){ //si no pulsa una carta boca arriba
@@ -85,8 +89,6 @@ MemoryGame = function(gs) {
             this.selected=null;
 
         }
-       
-        this.draw();
     };
 
 
