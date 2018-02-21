@@ -58,7 +58,7 @@ MemoryGame = function(gs) {
         var encontradas=this.nEncontradas;
         var prueba=function (){
             console.log("paso por aqui");
-            if(encontradas===8)
+            if(encontradas===16)
                 clearInterval(intervalId);
         };
         //Iniciamos el bucle cada segundo
@@ -81,10 +81,12 @@ MemoryGame = function(gs) {
                 this.cartas[cardId].found();
                 this.selected.found();
                 this.nEncontradas=+2;
+                gs.drawMessage("Match!");
             } 
             else{//si no, se las deja boca abajo
                 this.selected.flip();
                 this.cartas[cardId].flip();
+                gs.drawMessage("Try Again!");
             }
             this.selected=null;
 
