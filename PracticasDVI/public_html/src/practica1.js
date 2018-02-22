@@ -71,8 +71,8 @@ MemoryGame = function(gs) {
     //Funcion que realiza la acciones al seleccionar una carta
     this.onClick=function (cardId){
         
-       var that=this;
-     if(cardId!=null && !this.block){
+     var that=this;
+     if(cardId>=0 && cardId<=15 && cardId!==null && !this.block){
         if(this.selected===null && this.cartas[cardId].estado===0){//si es la primera de las dos cartas que
             this.cartas[cardId].flip();
             this.selected= this.cartas[cardId];
@@ -94,7 +94,7 @@ MemoryGame = function(gs) {
                     that.cartas[cardId].flip();
                     that.selected=null;
                     that.block=0;
-               },1000);
+               },750);
                
                 
                 this.mensaje="Vuelve a intentarlo";
