@@ -12,13 +12,14 @@ MemoryGame = function(gs) {
     //Array que contiene las cartas del juego
     this.cartas=[];
     //Mensaje del estado del Juego
-    this.mensaje;
+    this.mensaje="MemoryGameCard";
     //Numero de cartas encontradas
     this.nEncontradas=0;
     this.gs=gs;
     //primera carta seleccionada de las dos necesarias para formar pareja al clickear
     this.selected=null;
-  
+    this.block=0;
+    
     //Funcion que inicia el juego
     this.initGame=function(){
           var sp=['8-ball','potato','dinosaur','kronos','rocket','unicorn','guy','zeppelin'];
@@ -33,8 +34,10 @@ MemoryGame = function(gs) {
     //Funcion de dibujo
     this.draw=function(){
         //Se pinta el header
-        if(this.nEncontradas<this.cartas.length) gs.drawMessage("MemoryGameCard");
-        else gs.drawMessage("HAS GANADO");
+        if(this.nEncontradas<this.cartas.length) 
+            gs.drawMessage(this.mensaje);
+        else 
+            gs.drawMessage("¡Has Ganado!");
 
         //Se pinta el tablero
         for(i=0; i<16; i++){
@@ -55,48 +58,52 @@ MemoryGame = function(gs) {
             this.cartas[j] = x;
         }
         var intervalId;
-        var encontradas=this.nEncontradas;
+        var that=this;
         var prueba=function (){
-            console.log("paso por aqui");
-            if(encontradas===16)
+            console.log(that.nEncontradas);
+            that.draw();
+            if(that.nEncontradas===16)
                 clearInterval(intervalId);
         };
         //Iniciamos el bucle cada segundo
-        intervalId = setInterval(prueba, 1000);
+        intervalId = setInterval(prueba, 16);
     };
     //Funcion que realiza la acciones al seleccionar una carta
     this.onClick=function (cardId){
-       
-
+        
+       var that=this;
+     if(!this.block){
         if(this.selected===null && this.cartas[cardId].estado===0){//si es la primera de las dos cartas que
             this.cartas[cardId].flip();
             this.selected= this.cartas[cardId];
         }else if(this.cartas[cardId].estado===0){ //si no pulsa una carta boca arriba
             this.cartas[cardId].flip();
-           
-            //TO_DO: meter delay aqui para que se muestre por un rato la carta pulsada (si tiene que ser asi)
-            //--
-
+            
             if(this.cartas[cardId].compareTo(this.selected)){//si son iguales se dejan boca arriba actualizando el estado
                 this.cartas[cardId].found();
                 this.selected.found();
-                this.nEncontradas=+2;
-                gs.drawMessage("Match!");
+                this.nEncontradas+=2;
+                this.mensaje="¡Encontradas!";
+                that.selected=null;
+                console.log("Encontradas:"+this.nEncontradas);
             } 
             else{//si no, se las deja boca abajo
-                this.selected.flip();
-                this.cartas[cardId].flip();
-                gs.drawMessage("Try Again!");
+               this.block=1;
+               setTimeout(function(){
+                    that.selected.flip();
+                    that.cartas[cardId].flip();
+                    that.selected=null;
+                    that.block=0;
+               },1000);
+               
+                
+                this.mensaje="Vuelve a intentarlo";
             }
-            this.selected=null;
+            
 
         }
     };
-
-
-    function solve(cardId){
-       
-    };
+    }
 };
 
 
