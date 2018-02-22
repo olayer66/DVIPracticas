@@ -72,7 +72,7 @@ MemoryGame = function(gs) {
     this.onClick=function (cardId){
         
        var that=this;
-     if(cardId!=null && !this.block){
+     if(!cardId && !this.block){
         if(this.selected===null && this.cartas[cardId].estado===0){//si es la primera de las dos cartas que
             this.cartas[cardId].flip();
             this.selected= this.cartas[cardId];
