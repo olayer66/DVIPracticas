@@ -54,7 +54,7 @@ var Game = new function() {
   
 
   // Handle Input
-  var KEY_CODES = { 37:'left', 39:'right', 32 :'fire' };
+  var KEY_CODES = { 38:'up', 40:'down', 32 :'fire' };
   this.keys = {};
 
   this.setupInput = function() {
@@ -170,11 +170,6 @@ var TitleScreen = function TitleScreen(title,subtitle,callback) {
   };
 
   this.draw = function(ctx) {
-
-    // Background
-    ctx.fillStyle = "#000000";
-    ctx.fillRect(0, 0, Game.width, Game.height);
-
     // Foreground
     ctx.fillStyle = "#FFFFFF";
 
@@ -386,8 +381,8 @@ var TouchControls = function() {
     ctx.save();
 
     var yLoc = Game.height - unitWidth;
-    this.drawSquare(ctx,gutterWidth,yLoc,"\u25C0", Game.keys['left']);
-    this.drawSquare(ctx,unitWidth + gutterWidth,yLoc,"\u25B6", Game.keys['right']);
+    this.drawSquare(ctx,gutterWidth,yLoc,"\u25C0", Game.keys['up']);
+    this.drawSquare(ctx,unitWidth + gutterWidth,yLoc,"\u25B6", Game.keys['down']);
     this.drawSquare(ctx,4*unitWidth,yLoc,"A",Game.keys['fire']);
 
     ctx.restore();
@@ -399,16 +394,16 @@ var TouchControls = function() {
     var touch, x;
 
     e.preventDefault();
-    Game.keys['left'] = false;
-    Game.keys['right'] = false;
+    Game.keys['up'] = false;
+    Game.keys['down'] = false;
     for(var i=0;i<e.targetTouches.length;i++) {
       touch = e.targetTouches[i];
       x = touch.pageX / Game.canvasMultiplier - Game.canvas.offsetLeft;
       if(x < unitWidth) {
-        Game.keys['left'] = true;
+        Game.keys['up'] = true;
       } 
       if(x > unitWidth && x < 2*unitWidth) {
-        Game.keys['right'] = true;
+        Game.keys['down'] = true;
       } 
     }
 
