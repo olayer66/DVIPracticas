@@ -30,8 +30,7 @@ var Game = new function() {
   // Game Initialization
   this.initialize = function(canvasElementId,sprite_data,callback) {
     this.canvas = document.getElementById(canvasElementId);
-
-    this.playerOffset = 10;
+    this.posPlayer=0;
     this.canvasMultiplier= 1;
     this.setupMobile();
 

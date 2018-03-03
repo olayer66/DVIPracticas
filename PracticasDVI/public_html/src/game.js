@@ -71,34 +71,24 @@ var Fondo=function(){
 
 //Variable del jugador
 var Player = function() { 
-  this.setup('Player', { vx: 0, vy: 0, reloadTime: 0.25, maxVel: 100 });
-
-  this.reload = this.reloadTime;
-  this.x = Game.width -  Game.playerOffset ;
-  this.y = Game.height/2 ;
+  this.setup('Player', {});
+  this.positions={0:{x:90,y:100},1:{x:120,y:195},2:{x:150,y:290},3:{x:185,y:385}};
+  this.x = Game.width -  this.positions[Game.posPlayer].x ;
+  this.y = Game.height-this.positions[Game.posPlayer].y ;
 
   this.step = function(dt) {
-    if(Game.keys['up']) { 
-      this.vy = this.maxVel; 
-    }
-    else if(Game.keys['down']) { this.vy = -this.maxVel; }
-    else { this.vy = 0; }
-
-    this.y += this.vy * dt;
-
-    if(this.y < 0) { this.y = 0; }
-    else if(this.y > Game.height - this.y) { 
-      this.y = Game.height - this.h;
-    }
-
-    this.reload-=dt;
-    if(Game.keys['fire'] && this.reload < 0) {
+    if(Game.keys['up'] && Game.posPlayer<3)
+        Game.posPlayer++;    
+    else if(Game.keys['down'] && Game.posPlayer>0)
+        Game.posPlayer--;
+    this.x = Game.width -  this.positions[Game.posPlayer].x ;
+    this.y = Game.height-this.positions[Game.posPlayer].y ;
+    /*if(Game.keys['fire'] && this.reload < 0) {
       Game.keys['fire'] = false;
       this.reload = this.reloadTime;
-
-     // this.board.add(new Beer(this.x,this.y+this.h/2));
-     // this.board.add(new Beer(this.x+this.w,this.y+this.h/2));
-    }
+      this.board.add(new Beer(this.x,this.y+this.h/2));
+      this.board.add(new Beer(this.x+this.w,this.y+this.h/2));
+    }*/
   };
 };
 
