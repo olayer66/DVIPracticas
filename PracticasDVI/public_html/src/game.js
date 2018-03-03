@@ -15,6 +15,7 @@ var enemies = {
 };
 
 var OBJECT_FONDO = 1,
+    OBJECT_PARED_IZQ=1,
     OBJECT_PLAYER = 1,
     OBJECT_PLAYER_PROJECTILE = 2,
     OBJECT_ENEMY = 4,
@@ -44,6 +45,7 @@ var playGame = function() {
   Game.setBoard(1,new Fondo());
   var board = new GameBoard();
   board.add(new Player());
+  board.add(new ParedCol());
   //board.add(new Level(level1,winGame));
   Game.setBoard(2,board);
   Game.setBoard(3,new GamePoints(0));
@@ -62,13 +64,19 @@ var loseGame = function() {
 };
 //Fondo de pantalla
 var Fondo=function(){
-    this.setup('TapperGameplay', { x: 0,y: 0});
-    this.step = function(dt) {
-    };   
+    this.setup('TapperGameplay', { x: 0,y: 0}); 
+    this.step=function (dt){};
 };
  Fondo.prototype = new Sprite();
  Fondo.prototype.type = OBJECT_FONDO;
-
+ 
+ //Pared izquierda para la colision de las jarras
+ var ParedCol=function(){
+     this.setup('ParedIzda', { x: 0,y: 0});
+     this.step=function (dt){};
+ };
+ ParedCol.prototype = new Sprite();
+ ParedCol.prototype.type = OBJECT_PARED_IZQ;
 //Variable del jugador
 var Player = function() { 
   this.setup('Player', {});
@@ -88,7 +96,7 @@ var Player = function() {
     this.y = Game.height-this.positions[Game.posPlayer].y ;
     if(Game.keys['fire']) {
       Game.keys['fire'] = false;
-      this.board.add(new Beer(this.x,this.y));
+      this.board.add(new Beer(this.x,this.y,2));
     }
   };
 };
@@ -96,7 +104,7 @@ var Player = function() {
 Player.prototype = new Sprite();
 Player.prototype.type = OBJECT_PLAYER;
 
-//El jugador no puede morir
+//El jugador no puede morir (sustituir por recoger jarra vacia)
 /*Player.prototype.hit = function(damage) {
   if(this.board.remove(this)) {
     loseGame();
@@ -104,13 +112,13 @@ Player.prototype.type = OBJECT_PLAYER;
 };*/
 
 
-var Beer = function(x,y) {
+var Beer = function(x,y,veloc) {
   this.setup('Beer',{});
   this.x = x-20;
   this.y = y;
   this.move=0;
   //Velocidad de las cervezas
-  this.mult=2;
+  this.mult=veloc;
 };
 
 Beer.prototype = new Sprite();
