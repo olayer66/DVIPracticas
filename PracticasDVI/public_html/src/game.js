@@ -72,7 +72,7 @@ var Fondo=function(){
 //Variable del jugador
 var Player = function() { 
   this.setup('Player', {});
-  this.positions={0:{x:90,y:100},1:{x:120,y:195},2:{x:150,y:290},3:{x:185,y:385}};
+  this.positions={0:{x:90,y:100},1:{x:122,y:197},2:{x:153,y:292},3:{x:185,y:388}};
   this.x = Game.width -  this.positions[Game.posPlayer].x ;
   this.y = Game.height-this.positions[Game.posPlayer].y ;
 
@@ -86,43 +86,47 @@ var Player = function() {
     }
     this.x = Game.width -  this.positions[Game.posPlayer].x ;
     this.y = Game.height-this.positions[Game.posPlayer].y ;
-    /*if(Game.keys['fire'] && this.reload < 0) {
+    if(Game.keys['fire']) {
       Game.keys['fire'] = false;
-      this.reload = this.reloadTime;
-      this.board.add(new Beer(this.x,this.y+this.h/2));
-      this.board.add(new Beer(this.x+this.w,this.y+this.h/2));
-    }*/
+      this.board.add(new Beer(this.x,this.y));
+    }
   };
 };
 
 Player.prototype = new Sprite();
 Player.prototype.type = OBJECT_PLAYER;
 
-Player.prototype.hit = function(damage) {
+//El jugador no puede morir
+/*Player.prototype.hit = function(damage) {
   if(this.board.remove(this)) {
     loseGame();
   }
-};
+};*/
 
 
 var Beer = function(x,y) {
-  this.setup('beer',{ vy: -700, damage: 10 });
-  this.x = x - this.w/2;
-  this.y = y - this.h; 
+  this.setup('Beer',{});
+  this.x = x-20;
+  this.y = y;
+  this.move=0;
+  //Velocidad de las cervezas
+  this.mult=2;
 };
 
 Beer.prototype = new Sprite();
 Beer.prototype.type = OBJECT_PLAYER_PROJECTILE;
 
 Beer.prototype.step = function(dt)  {
-  this.y += this.vy * dt;
   var collision = this.board.collide(this,OBJECT_ENEMY);
   if(collision) {
     collision.hit(this.damage);
     this.board.remove(this);
-  } else if(this.y < -this.h) { 
-      this.board.remove(this); 
+  } else if(this.move>dt*this.mult)  { 
+      this.x=this.x-10;
+      this.move=0;
   }
+  else
+      this.move+=dt;
 };
 
 
