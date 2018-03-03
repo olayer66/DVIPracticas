@@ -77,10 +77,13 @@ var Player = function() {
   this.y = Game.height-this.positions[Game.posPlayer].y ;
 
   this.step = function(dt) {
-    if(Game.keys['up'] && Game.posPlayer<3)
-        Game.posPlayer++;    
-    else if(Game.keys['down'] && Game.posPlayer>0)
+    if(Game.keys['up'] && Game.posPlayer<3){
+        Game.posPlayer++;
+        Game.keys['up'] = false;
+    }else if(Game.keys['down'] && Game.posPlayer>0){
         Game.posPlayer--;
+        Game.keys['down'] = false;
+    }
     this.x = Game.width -  this.positions[Game.posPlayer].x ;
     this.y = Game.height-this.positions[Game.posPlayer].y ;
     /*if(Game.keys['fire'] && this.reload < 0) {
