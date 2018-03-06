@@ -18,8 +18,8 @@ var enemies = {
               B: 75, C: 1, E: 100, missiles: 2  }
 };
 
-var OBJECT_FONDO = 1,
-    OBJECT_PARED_IZQ=1,
+var OBJECT_FONDO = -1,
+    OBJECT_PARED_IZQ=0,
     OBJECT_PLAYER = 1,
     OBJECT_PLAYER_PROJECTILE = 2,
     OBJECT_ENEMY = 4,
@@ -81,6 +81,7 @@ var Fondo=function(){
  };
  ParedCol.prototype = new Sprite();
  ParedCol.prototype.type = OBJECT_PARED_IZQ;
+
 //Variable del jugador
 var Player = function() { 
   this.setup('Player', {});
@@ -98,6 +99,12 @@ var Player = function() {
     }
     this.x = Game.width -  this.positions[Game.posPlayer].x ;
     this.y = Game.height-this.positions[Game.posPlayer].y ;
+
+    var collision = this.board.collide(this,OBJECT_ENEMY_PROJECTILE)
+    if(collision) {
+      collision.hit(this.damage);
+    }
+
     if(Game.keys['fire']) {
       Game.keys['fire'] = false;
       this.board.add(new Beer(this.x,this.y,2));
@@ -110,14 +117,6 @@ var Player = function() {
 
 Player.prototype = new Sprite();
 Player.prototype.type = OBJECT_PLAYER;
-
-//El jugador no puede morir (sustituir por recoger jarra vacia)
-/*Player.prototype.hit = function(damage) {
-  if(this.board.remove(this)) {
-    loseGame();
-  }
-};*/
-
 
 var Beer = function(x,y,veloc) {
   this.setup('Beer',{});
@@ -134,10 +133,14 @@ Beer.prototype.type = OBJECT_PLAYER_PROJECTILE;
 
 Beer.prototype.step = function(dt)  {
   var collision = this.board.collide(this,OBJECT_ENEMY);
+  var collisionPa ;//= this.board.collide(this,OBJECT_PARED_IZQ);
   if(collision) {
     collision.hit(this.damage);
     this.board.remove(this);
-  } else if(this.move>dt*this.mult)  { 
+  } else if(collisionPa){
+    loseGame();
+  }
+  else if(this.move>dt*this.mult)  { 
       this.x=this.x-10;
       this.move=0;
   }
@@ -159,17 +162,9 @@ Beer.prototype.hit = function(damage) {
 var Enemy = function(blueprint,override) {
   this.setup('NPC',{});
   this.move=0;
-  //Velocidad
   this.mult=10;
   this.positions={0:{x:50,y:112},1:{x:70,y:210},2:{x:113,y:305},3:{x:115,y:400}};
   var p= Math.floor((Math.random() * 4) + 0);
-
-  
-/*{x:325, y:80},
-{x:357, y:185},
-{x:389, y:281},
-{x:421, y:377}
-*/
 
   this.x =  this.positions[p].x ;
   this.y = Game.height-this.positions[p].y ;
@@ -195,10 +190,11 @@ Enemy.prototype.step = function(dt) {
 
   this.x += this.vx * dt;
 
-  var collision = this.board.collide(this,OBJECT_PLAYER/*PARED*/);
+  var collision = this.board.collide(this,OBJECT_PLAYER);/*PARED*/
   if(collision) {
     collision.hit(this.damage);
     this.board.remove(this);
+    loseGame();
   }
   
   if(this.x < -this.w ||
@@ -216,10 +212,16 @@ Enemy.prototype.hit = function(damage) {
                                    this.y + this.h/2));
     }
   }
-
-  //si choca contra las paredes imaginarias, fin del juego
+};
+//si choca contra las paredes imaginarias, fin del juego
+/* algo como:
+Enemy.prototype.hit = function(damage) {
+  if(this.board.remove(this)) {
+    //loseGame();
+  }
 };
 
+*/
 
 var Glass = function(x,y) {
   this.setup('Glass',{ vx: 100, damage: 10 });
@@ -234,10 +236,11 @@ Glass.prototype.step = function(dt)  {
   this.x += this.vx * dt;
   var collision = this.board.collide(this,OBJECT_PLAYER)
   if(collision) {
-    collision.hit(this.damage);
-    this.board.remove(this);
+      Game.points += this.points || 100;
+    //collision.hit(this.damage);
+    //this.board.remove(this);
   } else if(this.y > Game.height) {
-      this.board.remove(this); 
+     this.board.remove(this); 
   }
 };
 
