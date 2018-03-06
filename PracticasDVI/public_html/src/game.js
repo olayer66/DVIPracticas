@@ -8,8 +8,12 @@ var sprites = {
 };
 
 var enemies = {
-  straight: { x: 0,   y: -50, sprite: 'NPC', health: 10, 
-              E: 100 },
+  e1: { sprite: 'NPC', health: 10, 
+  A: 100},
+  
+  g1: { x: 0,   y: 90, sprite: 'NPC', health: 10, 
+  A: 100},
+
   ltr:      { x: 0,   y: -100, sprite: 'ParedIzda', health: 10, 
               B: 75, C: 1, E: 100, missiles: 2  }
 };
@@ -97,6 +101,9 @@ var Player = function() {
     if(Game.keys['fire']) {
       Game.keys['fire'] = false;
       this.board.add(new Beer(this.x,this.y,2));
+      var enemy = enemies["e1"],
+          override = { };
+      this.board.add(new Enemy(enemy,override));
     }
   };
 };
@@ -117,6 +124,7 @@ var Beer = function(x,y,veloc) {
   this.x = x-20;
   this.y = y;
   this.move=0;
+  this.damage=10;
   //Velocidad de las cervezas
   this.mult=veloc;
 };
@@ -137,8 +145,35 @@ Beer.prototype.step = function(dt)  {
       this.move+=dt;
 };
 
+Beer.prototype.hit = function(damage) {
+  this.health -= damage;
+  if(this.health <=0) {
+    if(this.board.remove(this)) {
+      Game.points += this.points || 100;
+      this.board.add(new Glass(this.x + this.w/2, 
+                                   this.y + this.h/2));
+    }
+  }
+};
 
 var Enemy = function(blueprint,override) {
+  this.setup('NPC',{});
+  this.move=0;
+  //Velocidad
+  this.mult=10;
+  this.positions={0:{x:50,y:112},1:{x:70,y:210},2:{x:113,y:305},3:{x:115,y:400}};
+  var p= Math.floor((Math.random() * 4) + 0);
+
+  
+/*{x:325, y:80},
+{x:357, y:185},
+{x:389, y:281},
+{x:421, y:377}
+*/
+
+  this.x =  this.positions[p].x ;
+  this.y = Game.height-this.positions[p].y ;
+
   this.merge(this.baseParameters);
   this.setup(blueprint.sprite,blueprint);
   this.merge(override);
@@ -156,19 +191,17 @@ Enemy.prototype.step = function(dt) {
   this.t += dt;
 
   this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
-  this.vy = this.E + this.F * Math.sin(this.G * this.t + this.H);
+  this.vy = 0;
 
   this.x += this.vx * dt;
-  this.y += this.vy * dt;
 
-  var collision = this.board.collide(this,OBJECT_PLAYER);
+  var collision = this.board.collide(this,OBJECT_PLAYER/*PARED*/);
   if(collision) {
     collision.hit(this.damage);
     this.board.remove(this);
   }
   
-  if(this.y > Game.height ||
-     this.x < -this.w ||
+  if(this.x < -this.w ||
      this.x > Game.width) {
        this.board.remove(this);
   }
@@ -179,14 +212,17 @@ Enemy.prototype.hit = function(damage) {
   if(this.health <=0) {
     if(this.board.remove(this)) {
       Game.points += this.points || 100;
-      this.board.add(new Explosion(this.x + this.w/2, 
+      this.board.add(new Glass(this.x + this.w/2, 
                                    this.y + this.h/2));
     }
   }
+
+  //si choca contra las paredes imaginarias, fin del juego
 };
 
+
 var Glass = function(x,y) {
-  this.setup('Glass',{ vy: 200, damage: 10 });
+  this.setup('Glass',{ vx: 100, damage: 10 });
   this.x = x - this.w/2;
   this.y = y;
 };
@@ -195,7 +231,7 @@ Glass.prototype = new Sprite();
 Glass.prototype.type = OBJECT_ENEMY_PROJECTILE;
 
 Glass.prototype.step = function(dt)  {
-  this.y += this.vy * dt;
+  this.x += this.vx * dt;
   var collision = this.board.collide(this,OBJECT_PLAYER)
   if(collision) {
     collision.hit(this.damage);
