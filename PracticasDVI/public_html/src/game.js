@@ -19,11 +19,12 @@ var enemies = {
 };
 
 var OBJECT_FONDO = 1,
-    OBJECT_BLOQUEO=2,
-    OBJECT_PLAYER = 4,
-    OBJECT_PLAYER_PROJECTILE = 8,
-    OBJECT_ENEMY = 16,
-    OBJECT_ENEMY_PROJECTILE = 32;
+    OBJECT_PARED_IZQ=2,
+    OBJECT_BLOQUEO=4,
+    OBJECT_PLAYER = 8,
+    OBJECT_PLAYER_PROJECTILE = 16,
+    OBJECT_ENEMY = 32,
+    OBJECT_ENEMY_PROJECTILE = 64;
 
 var startGame = function() {
     Game.setBoard(0,new Fondo());
@@ -48,10 +49,18 @@ var playGame = function() {
   Game.setBoard(1,new Fondo());
   var board = new GameBoard();
   board.add(new Player());
-  /*for(var i=0;i<4;i++){
-      
-  }*/
-  board.add(new Bloq(100,100));
+  board.add(new ParedCol());
+  //Posiciones de los bloqueos de la puertas
+  this.posPuerta={0:{x:10,y:112},1:{x:40,y:210},2:{x:75,y:305},3:{x:106,y:400}};
+  //Posiciones de los bloqueos de los findes de barra
+  this.posFinBarra={0:{x:80,y:100},1:{x:112,y:197},2:{x:143,y:292},3:{x:175,y:388}};
+  for(var i=0;i<4;i++){
+      //Puertas
+      board.add(new Bloq(this.posPuerta[i].x,Game.height-this.posPuerta[i].y));
+      //Fin de barra
+      board.add(new Bloq(Game.width-this.posFinBarra[i].x,Game.height-this.posFinBarra[i].y));
+  }
+  
   //board.add(new Level(level1,winGame));
   Game.setBoard(2,board);
   Game.setBoard(3,new GamePoints(0));
@@ -75,12 +84,33 @@ var Fondo=function(){
 };
  Fondo.prototype = new Sprite();
  Fondo.prototype.type = OBJECT_FONDO;
+
+//Bloqueos en los lados de la barra
 var Bloq=function(x,y){
     this.setup(x,y);
     this.step=function(dt){};
 };
 Bloq.prototype=new Bloqueo();
 Bloq.prototype.type=OBJECT_BLOQUEO;
+
+//Pared izquierda
+var ParedCol=function(){
+     this.setup('ParedIzda', { x: 0,y: 0});
+     this.tiempo=0;   
+     this.step=function (dt){
+         this.entra=dt*(Game.velAparicion);
+         if(this.tiempo>this.entra){
+            var enemy = enemies["e1"],override = { };
+            this.board.add(new Enemy(enemy,override));
+            this.tiempo=0;
+         }else
+             this.tiempo+=dt;
+         
+};
+ };
+ ParedCol.prototype = new Sprite();
+ ParedCol.prototype.type = OBJECT_PARED_IZQ;
+ 
 //Variable del jugador
 var Player = function() { 
   this.setup('Player', {});
@@ -106,10 +136,7 @@ var Player = function() {
 
     if(Game.keys['fire']) {
       Game.keys['fire'] = false;
-      this.board.add(new Beer(this.x,this.y,2));
-      var enemy = enemies["e1"],
-          override = { };
-      this.board.add(new Enemy(enemy,override));
+      this.board.add(new Beer(this.x,this.y,Game.velJarra));
     }
   };
 };

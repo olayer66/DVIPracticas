@@ -1,3 +1,4 @@
+//Atencion!! cambiar el nivel de transparencia a 0 para entregar: Linea 285
 (function() {
     var lastTime = 0;
     var vendors = ['ms', 'moz', 'webkit', 'o'];
@@ -30,7 +31,10 @@ var Game = new function() {
   // Game Initialization
   this.initialize = function(canvasElementId,sprite_data,callback) {
     this.canvas = document.getElementById(canvasElementId);
-    this.posPlayer=0;
+    this.posPlayer=0;//Posicion inicial del jugador
+    this.velJarra=2;//multiplicador de la velocidad de la jarras
+    this.velAparicion=80;//multiplicador de la velocidad de aparacion de los enemigos
+    this.velEnemigo=2;//multiplicador de la velocidad del los enemigos
     this.canvasMultiplier= 1;
     this.setupMobile();
 
@@ -165,7 +169,10 @@ var TitleScreen = function TitleScreen(title,subtitle,callback) {
   var up = false;
   this.step = function(dt) {
     if(!Game.keys['fire']) up = true;
-    if(up && Game.keys['fire'] && callback) callback();
+    if(up && Game.keys['fire'] && callback) {
+        Game.keys['fire']=false;
+        callback();
+    }
   };
 
   this.draw = function(ctx) {
