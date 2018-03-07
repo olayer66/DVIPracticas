@@ -182,7 +182,6 @@ var TitleScreen = function TitleScreen(title,subtitle,callback) {
   };
 };
 
-
 var GameBoard = function() {
   var board = this;
 
@@ -272,6 +271,20 @@ var GameBoard = function() {
   };
 
 
+};
+
+var Bloqueo= function(){};
+Bloqueo.prototype.setup=function(x,y){
+    this.x=x;
+    this.y=y;
+};
+Bloqueo.prototype.draw=function(ctx){
+    ctx.fillStyle = "rgba(85,191,63,1)";
+    ctx.fillRect(this.x,this.y,10,50);
+};
+
+Bloqueo.prototype.hit = function(damage) {
+  this.board.remove(this);
 };
 
 var Sprite = function() { };

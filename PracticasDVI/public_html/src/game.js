@@ -18,13 +18,12 @@ var enemies = {
               B: 75, C: 1, E: 100, missiles: 2  }
 };
 
-var OBJECT_FONDO = -1,
-    OBJECT_PARED_IZQ=0,
-    OBJECT_PLAYER = 1,
-    OBJECT_PLAYER_PROJECTILE = 2,
-    OBJECT_ENEMY = 4,
-    OBJECT_ENEMY_PROJECTILE = 8,
-    OBJECT_POWERUP = 16;
+var OBJECT_FONDO = 1,
+    OBJECT_BLOQUEO=2,
+    OBJECT_PLAYER = 4,
+    OBJECT_PLAYER_PROJECTILE = 8,
+    OBJECT_ENEMY = 16,
+    OBJECT_ENEMY_PROJECTILE = 32;
 
 var startGame = function() {
     Game.setBoard(0,new Fondo());
@@ -49,7 +48,10 @@ var playGame = function() {
   Game.setBoard(1,new Fondo());
   var board = new GameBoard();
   board.add(new Player());
-  board.add(new ParedCol());
+  /*for(var i=0;i<4;i++){
+      
+  }*/
+  board.add(new Bloq(100,100));
   //board.add(new Level(level1,winGame));
   Game.setBoard(2,board);
   Game.setBoard(3,new GamePoints(0));
@@ -73,15 +75,12 @@ var Fondo=function(){
 };
  Fondo.prototype = new Sprite();
  Fondo.prototype.type = OBJECT_FONDO;
- 
- //Pared izquierda para la colision de las jarras
- var ParedCol=function(){
-     this.setup('ParedIzda', { x: 0,y: 0});
-     this.step=function (dt){};
- };
- ParedCol.prototype = new Sprite();
- ParedCol.prototype.type = OBJECT_PARED_IZQ;
-
+var Bloq=function(x,y){
+    this.setup(x,y);
+    this.step=function(dt){};
+};
+Bloq.prototype=new Bloqueo();
+Bloq.prototype.type=OBJECT_BLOQUEO;
 //Variable del jugador
 var Player = function() { 
   this.setup('Player', {});
@@ -133,12 +132,9 @@ Beer.prototype.type = OBJECT_PLAYER_PROJECTILE;
 
 Beer.prototype.step = function(dt)  {
   var collision = this.board.collide(this,OBJECT_ENEMY);
-  var collisionPa ;//= this.board.collide(this,OBJECT_PARED_IZQ);
   if(collision) {
     collision.hit(this.damage);
     this.board.remove(this);
-  } else if(collisionPa){
-    loseGame();
   }
   else if(this.move>dt*this.mult)  { 
       this.x=this.x-10;
@@ -238,7 +234,7 @@ Glass.prototype.step = function(dt)  {
   if(collision) {
       Game.points += this.points || 100;
     //collision.hit(this.damage);
-    //this.board.remove(this);
+    this.board.remove(this);
   } else if(this.y > Game.height) {
      this.board.remove(this); 
   }
