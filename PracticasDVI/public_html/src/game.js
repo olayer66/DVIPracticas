@@ -1,3 +1,4 @@
+//Carga de las imagenes(sprites)
 var sprites = {
     Beer: {sx: 512,sy: 99,w: 23,h: 32,frames: 1},
     Glass: {sx: 512,sy: 131,w: 23,h: 32,frames: 1},
@@ -7,10 +8,14 @@ var sprites = {
     TapperGameplay: {sx: 0,sy: 480,w: 512,h: 480,frames: 1}
 };
 
+//Array con los datos base de los "enemigos"
 var enemies = {
-  e1: { sprite: 'NPC', health: 10, A: 100}
+  e1: {sprite: 'NPC', health: 10, A: 100},//Cliente
+  j1: {sprite: 'Beer', health: 10, A: 100},//Jarra llena
+  j2: {sprite: 'Glass', health: 10, A: 100}//Jarra vacia
 };
 
+//Variables de control de las colisiones
 var OBJECT_FONDO = 1,
     OBJECT_PARED_IZQ=2,
     OBJECT_BLOQUEO_IZQ=4,
@@ -20,6 +25,7 @@ var OBJECT_FONDO = 1,
     OBJECT_ENEMY = 64,
     OBJECT_ENEMY_PROJECTILE = 128;
 
+//Inicio del juego
 var startGame = function() {
     Game.setBoard(0,new Fondo());
     Game.setBoard(1,new TitleScreen("Tapper", "Presiona espacio para empezar",playGame));
@@ -37,11 +43,10 @@ var level1 = [
   [ 22000,  25000, 400, 'wiggle', { x: 100 }]
 ];
 
-
-var board;
+//Inicio del partida
 var playGame = function() {
   Game.setBoard(1,new Fondo());
-  board = new GameBoard();
+  var board = new GameBoard();
   board.add(new Player());
   board.add(new ParedCol());
   //Posiciones de los bloqueos de la puertas
@@ -60,17 +65,18 @@ var playGame = function() {
   Game.setBoard(2,board);
   Game.setBoard(3,new GamePoints(0));
 };
-
+//Partida ganada
 var winGame = function() {
   Game.stopBoard();
   Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",  playGame));                           
 };
-
+//Partida perida
 var loseGame = function() {
   Game.stopBoard();
   Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar", playGame));
 };
-//Fondo de pantalla
+
+/*----------------------------FONDO PANTALLA----------------------------------*/
 var Fondo=function(){
     this.setup('TapperGameplay', { x: 0,y: 0}); 
     this.step=function (dt){};
@@ -78,7 +84,7 @@ var Fondo=function(){
  Fondo.prototype = new Sprite();
  Fondo.prototype.type = OBJECT_FONDO;
 
-//Bloqueo lado izquierdo
+/*---------------------------BLOQUEO IZQUIERDO--------------------------------*/
 var BloqIzq=function(x,y){
     this.setup(x,y);
     this.step=function(dt){
@@ -91,14 +97,16 @@ var BloqIzq=function(x,y){
 };
 BloqIzq.prototype=new Bloqueo();
 BloqIzq.prototype.type=OBJECT_BLOQUEO_IZQ;
-//Bloqueo lado derecho
+
+/*-----------------------------BLOQUEO DERECHO--------------------------------*/
 var BloqDer=function(x,y){
     this.setup(x,y);
     this.step=function(dt){};
 };
 BloqDer.prototype=new Bloqueo();
 BloqDer.prototype.type=OBJECT_BLOQUEO_DER;
-//Pared izquierda
+
+/*---------------------------PARED IZQUIERDA----------------------------------*/
 var ParedCol=function(){
      this.setup('ParedIzda', { x: 0,y: 0});
      this.tiempo=0;   
@@ -109,14 +117,13 @@ var ParedCol=function(){
             this.board.add(new Enemy(enemy,override));
             this.tiempo=0;
          }else
-             this.tiempo+=dt;
-         
+             this.tiempo+=dt;  
     };
  };
  ParedCol.prototype = new Sprite();
  ParedCol.prototype.type = OBJECT_PARED_IZQ;
  
-//Variable del jugador
+/*-----------------------------------JUGADOR----------------------------------*/
 var Player = function() { 
   this.setup('Player', {});
   this.positions={0:{x:90,y:100},1:{x:122,y:197},2:{x:153,y:292},3:{x:185,y:388}};
@@ -141,56 +148,58 @@ var Player = function() {
 
     if(Game.keys['fire']) {
       Game.keys['fire'] = false;
-      this.board.add(new Beer(this.x,this.y,Game.velJarra));
+      var jarra=enemies["j1"];
+      var override={x:this.x,y:this.y};
+      this.board.add(new Beer(jarra,override));
     }
   };
 };
 
 Player.prototype = new Sprite();
 Player.prototype.type = OBJECT_PLAYER;
-
-var Beer = function(x,y,veloc) {
-  this.setup('Beer',{});
-  this.x = x-20;
-  this.y = y;
-  this.move=0;
-  this.damage=10;
-  //Velocidad de las cervezas
-  this.mult=veloc;
+/*-------------------------JARRA LLENA----------------------------------------*/
+var Beer = function(blueprint,override) {
+  this.merge(this.baseParameters);
+  this.setup(blueprint.sprite,blueprint);
+  this.merge(override);
 };
 
 Beer.prototype = new Sprite();
 Beer.prototype.type = OBJECT_PLAYER_PROJECTILE;
+//Parametros base de "JARRA LLENA"
+Beer.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0, 
+                                  t: 0, 
+                                  reloadTime: 0.75, 
+                                  reload: 0 };
 
 Beer.prototype.step = function(dt)  {
+  this.t += dt;
+
+  this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
+  this.vy = 0;
+
+  this.x -= this.vx*dt;
   var collision = this.board.collide(this,OBJECT_ENEMY);
   if(collision) {
     collision.hit(this.damage);
     this.board.remove(this);
+    Game.points += this.points || 100;
+    var jarra=enemies["j2"];
+    var override={x:this.x,y:this.y};
+    this.board.add(new Glass(jarra,override));
   }
-  else if(this.move>dt*this.mult)  { 
-      this.x=this.x-10;
-      this.move=0;
-  }
-  else
-      this.move+=dt;
 };
-
 Beer.prototype.hit = function(damage) {
   this.health -= damage;
   if(this.health <=0) {
     if(this.board.remove(this)) {
-      Game.points += this.points || 100;
-      this.board.add(new Glass(this.x + this.w/2, 
-                                   this.y + this.h/2));
+      
     }
   }
 };
 
+/*--------------------------------CLIENTE-------------------------------------*/
 var Enemy = function(blueprint,override) {
-  this.setup('NPC',{});
-  this.move=0;
-  this.mult=10;
   this.positions={0:{x:30,y:112},1:{x:65,y:210},2:{x:95,y:305},3:{x:125,y:400}};
   var p= Math.floor((Math.random() * 4) + 0);
 
@@ -204,12 +213,12 @@ var Enemy = function(blueprint,override) {
 
 Enemy.prototype = new Sprite();
 Enemy.prototype.type = OBJECT_ENEMY;
-
+//Parametros base "CLIENTE"
 Enemy.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0, 
-                                   E: 0, F: 0, G: 0, H: 0,
-                                   t: 0, reloadTime: 0.75, 
+                                   t: 0, 
+                                   reloadTime: 0.75, 
                                    reload: 0 };
-
+//Funciones de ejecucion                              
 Enemy.prototype.step = function(dt) {
   this.t += dt;
 
@@ -230,48 +239,48 @@ Enemy.prototype.step = function(dt) {
        this.board.remove(this);
   }
 };
-
 Enemy.prototype.hit = function(damage) {
   this.health -= damage;
-  if(this.health <=0) {
-    if(this.board.remove(this)) {
-      Game.points += this.points || 100;
-      this.board.add(new Glass(this.x + this.w/2, 
-                                   this.y + this.h/2));
-    }
-  }
-};
-//si choca contra las paredes imaginarias, fin del juego
-/* algo como:
-Enemy.prototype.hit = function(damage) {
-  if(this.board.remove(this)) {
-    //loseGame();
-  }
+  this.board.remove(this);
 };
 
-*/
-
-var Glass = function(x,y) {
-  this.setup('Glass',{ vx: 100, damage: 10 });
-  this.x = x - this.w/2;
-  this.y = y;
+/*--------------------------------JARRA VACIA---------------------------------*/
+var Glass = function(blueprint,override) {
+  this.merge(this.baseParameters);
+  this.setup(blueprint.sprite,blueprint);
+  this.merge(override);
 };
 
 Glass.prototype = new Sprite();
 Glass.prototype.type = OBJECT_ENEMY_PROJECTILE;
-
+//Parametros base "JARRA VACIA"
+Glass.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0, 
+                                   t: 0, 
+                                   reloadTime: 0.75, 
+                                   reload: 0 };
+//Funciones de ejecucion
 Glass.prototype.step = function(dt)  {
-  this.x += this.vx * dt;
-  var collision = this.board.collide(this,OBJECT_PLAYER)
+  //Movimiento
+  this.t += dt;
+  this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
+  this.vy = 0;
+  this.x += this.vx*dt;
+  //Colisiones
+  var collision = this.board.collide(this,OBJECT_PLAYER);
+  var collisionBlq = this.board.collide(this,OBJECT_BLOQUEO_DER);
   if(collision) {
-      Game.points += this.points || 100;
-    //collision.hit(this.damage);
+    Game.points += this.points || 100;
     this.board.remove(this);
+  } else if(collisionBlq){
+      this.board.remove(this);
+        loseGame();
   } else if(this.y > Game.height) {
      this.board.remove(this); 
   }
 };
 
+/*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
+//Evento de inicio del juego
 window.addEventListener("load", function() {
   Game.initialize("game",sprites,startGame);
 });
