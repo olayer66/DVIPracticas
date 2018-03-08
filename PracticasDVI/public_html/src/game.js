@@ -8,23 +8,17 @@ var sprites = {
 };
 
 var enemies = {
-  e1: { sprite: 'NPC', health: 10, 
-  A: 100},
-  
-  g1: { x: 0,   y: 90, sprite: 'NPC', health: 10, 
-  A: 100},
-
-  ltr:      { x: 0,   y: -100, sprite: 'ParedIzda', health: 10, 
-              B: 75, C: 1, E: 100, missiles: 2  }
+  e1: { sprite: 'NPC', health: 10, A: 100}
 };
 
 var OBJECT_FONDO = 1,
     OBJECT_PARED_IZQ=2,
-    OBJECT_BLOQUEO=4,
-    OBJECT_PLAYER = 8,
-    OBJECT_PLAYER_PROJECTILE = 16,
-    OBJECT_ENEMY = 32,
-    OBJECT_ENEMY_PROJECTILE = 64;
+    OBJECT_BLOQUEO_IZQ=4,
+    OBJECT_BLOQUEO_DER=8,
+    OBJECT_PLAYER = 16,
+    OBJECT_PLAYER_PROJECTILE = 32,
+    OBJECT_ENEMY = 64,
+    OBJECT_ENEMY_PROJECTILE = 128;
 
 var startGame = function() {
     Game.setBoard(0,new Fondo());
@@ -44,21 +38,22 @@ var level1 = [
 ];
 
 
-
+var board;
 var playGame = function() {
   Game.setBoard(1,new Fondo());
-  var board = new GameBoard();
+  board = new GameBoard();
   board.add(new Player());
   board.add(new ParedCol());
   //Posiciones de los bloqueos de la puertas
-  this.posPuerta={0:{x:10,y:112},1:{x:40,y:210},2:{x:75,y:305},3:{x:106,y:400}};
+  this.posPuerta={0:{x:5,y:112},1:{x:35,y:210},2:{x:70,y:305},3:{x:100,y:400}};
   //Posiciones de los bloqueos de los findes de barra
   this.posFinBarra={0:{x:80,y:100},1:{x:112,y:197},2:{x:143,y:292},3:{x:175,y:388}};
   for(var i=0;i<4;i++){
+      var bloqueo;
       //Puertas
-      board.add(new Bloq(this.posPuerta[i].x,Game.height-this.posPuerta[i].y));
+      board.add(new BloqIzq(this.posPuerta[i].x,Game.height-this.posPuerta[i].y));
       //Fin de barra
-      board.add(new Bloq(Game.width-this.posFinBarra[i].x,Game.height-this.posFinBarra[i].y));
+      board.add(new BloqDer(Game.width-this.posFinBarra[i].x,Game.height-this.posFinBarra[i].y));
   }
   
   //board.add(new Level(level1,winGame));
@@ -67,15 +62,13 @@ var playGame = function() {
 };
 
 var winGame = function() {
-  Game.setBoard(3,new TitleScreen("Has ganado!", 
-                                  "Presiona espacio para volver a jugar",
-                                  playGame));
+  Game.stopBoard();
+  Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",  playGame));                           
 };
 
 var loseGame = function() {
-  Game.setBoard(3,new TitleScreen("Has perdido!", 
-                                  "Presiona espacio para volver a jugar",
-                                  playGame));
+  Game.stopBoard();
+  Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar", playGame));
 };
 //Fondo de pantalla
 var Fondo=function(){
@@ -85,14 +78,26 @@ var Fondo=function(){
  Fondo.prototype = new Sprite();
  Fondo.prototype.type = OBJECT_FONDO;
 
-//Bloqueos en los lados de la barra
-var Bloq=function(x,y){
+//Bloqueo lado izquierdo
+var BloqIzq=function(x,y){
+    this.setup(x,y);
+    this.step=function(dt){
+        var collision = this.board.collide(this,OBJECT_PLAYER_PROJECTILE);
+        if(collision){
+            this.board.remove(this);
+            loseGame();
+        }         
+    };
+};
+BloqIzq.prototype=new Bloqueo();
+BloqIzq.prototype.type=OBJECT_BLOQUEO_IZQ;
+//Bloqueo lado derecho
+var BloqDer=function(x,y){
     this.setup(x,y);
     this.step=function(dt){};
 };
-Bloq.prototype=new Bloqueo();
-Bloq.prototype.type=OBJECT_BLOQUEO;
-
+BloqDer.prototype=new Bloqueo();
+BloqDer.prototype.type=OBJECT_BLOQUEO_DER;
 //Pared izquierda
 var ParedCol=function(){
      this.setup('ParedIzda', { x: 0,y: 0});
@@ -106,7 +111,7 @@ var ParedCol=function(){
          }else
              this.tiempo+=dt;
          
-};
+    };
  };
  ParedCol.prototype = new Sprite();
  ParedCol.prototype.type = OBJECT_PARED_IZQ;
@@ -129,7 +134,7 @@ var Player = function() {
     this.x = Game.width -  this.positions[Game.posPlayer].x ;
     this.y = Game.height-this.positions[Game.posPlayer].y ;
 
-    var collision = this.board.collide(this,OBJECT_ENEMY_PROJECTILE)
+    var collision = this.board.collide(this,OBJECT_ENEMY_PROJECTILE);
     if(collision) {
       collision.hit(this.damage);
     }
@@ -186,7 +191,7 @@ var Enemy = function(blueprint,override) {
   this.setup('NPC',{});
   this.move=0;
   this.mult=10;
-  this.positions={0:{x:50,y:112},1:{x:70,y:210},2:{x:113,y:305},3:{x:115,y:400}};
+  this.positions={0:{x:30,y:112},1:{x:65,y:210},2:{x:95,y:305},3:{x:125,y:400}};
   var p= Math.floor((Math.random() * 4) + 0);
 
   this.x =  this.positions[p].x ;
@@ -211,9 +216,9 @@ Enemy.prototype.step = function(dt) {
   this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
   this.vy = 0;
 
-  this.x += this.vx * dt;
+  this.x += this.vx*dt;
 
-  var collision = this.board.collide(this,OBJECT_PLAYER);/*PARED*/
+  var collision = this.board.collide(this,OBJECT_BLOQUEO_DER);//Fin de barra
   if(collision) {
     collision.hit(this.damage);
     this.board.remove(this);

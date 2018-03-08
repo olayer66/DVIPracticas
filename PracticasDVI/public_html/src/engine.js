@@ -33,7 +33,7 @@ var Game = new function() {
     this.canvas = document.getElementById(canvasElementId);
     this.posPlayer=0;//Posicion inicial del jugador
     this.velJarra=2;//multiplicador de la velocidad de la jarras
-    this.velAparicion=80;//multiplicador de la velocidad de aparacion de los enemigos
+    this.velAparicion=160;//multiplicador de la velocidad de aparacion de los enemigos
     this.velEnemigo=2;//multiplicador de la velocidad del los enemigos
     this.canvasMultiplier= 1;
     this.setupMobile();
@@ -89,7 +89,8 @@ var Game = new function() {
     for(var i=0,len = boards.length;i<len;i++) {
       if(boards[i]) { 
         boards[i].step(dt);
-        boards[i].draw(Game.ctx);
+        if(boards[i]) //Si se ha finalizado el juego
+            boards[i].draw(Game.ctx);
       }
     }
     lastTime = curTime;
@@ -137,7 +138,9 @@ var Game = new function() {
     this.canvas.style.top="0px";
 
   };
-
+  this.stopBoard= function(){
+    boards[2]=null; 
+  };
 };
 
 
@@ -280,14 +283,17 @@ var GameBoard = function() {
 
 };
 
+//Objeto de bloqueo del principio y el fin de la barra
 var Bloqueo= function(){};
 Bloqueo.prototype.setup=function(x,y){
     this.x=x;
     this.y=y;
+    this.w=5;
+    this.h=50;
 };
 Bloqueo.prototype.draw=function(ctx){
     ctx.fillStyle = "rgba(85,191,63,1)";
-    ctx.fillRect(this.x,this.y,10,50);
+    ctx.fillRect(this.x,this.y,this.w,this.h);
 };
 
 Bloqueo.prototype.hit = function(damage) {
