@@ -8,11 +8,15 @@ var sprites = {
     TapperGameplay: {sx: 0,sy: 480,w: 512,h: 480,frames: 1}
 };
 
-//Array con los datos base de los "enemigos"
-var enemies = {
-  e1: {sprite: 'NPC', health: 10, A: 100},//Cliente
-  j1: {sprite: 'Beer', health: 10, A: 100},//Jarra llena
-  j2: {sprite: 'Glass', health: 10, A: 100}//Jarra vacia
+/*
+ * @description Array con los datos base de las propiedades de las entidades
+ * @returns {propiedades}
+ */
+var entidades = {
+  pl: {sprite: 'Player', position:0},//Jugador
+  e1: {sprite: 'NPC', health: 1, A: 100},//Cliente
+  j1: {sprite: 'Beer', health: 1, A: 100},//Jarra llena
+  j2: {sprite: 'Glass', health: 1, A: 100}//Jarra vacia
 };
 
 //Variables de control de las colisiones
@@ -47,7 +51,9 @@ var level1 = [
 var playGame = function() {
   Game.setBoard(1,new Fondo());
   var board = new GameBoard();
-  board.add(new Player());
+  //Insertamos el jugador
+  var jugador=entidades["pl"],override={};
+  board.add(new Player(jugador,override));
   board.add(new ParedCol());
   //Posiciones de los bloqueos de la puertas
   this.posPuerta={0:{x:5,y:112},1:{x:35,y:210},2:{x:70,y:305},3:{x:100,y:400}};
@@ -113,7 +119,7 @@ var ParedCol=function(){
      this.step=function (dt){
          this.entra=dt*(Game.velAparicion);
          if(this.tiempo>this.entra){
-            var enemy = enemies["e1"],override = { };
+            var enemy = entidades["e1"],override = { };
             this.board.add(new Enemy(enemy,override));
             this.tiempo=0;
          }else
@@ -124,22 +130,29 @@ var ParedCol=function(){
  ParedCol.prototype.type = OBJECT_PARED_IZQ;
  
 /*-----------------------------------JUGADOR----------------------------------*/
-var Player = function() { 
-  this.setup('Player', {});
+var Player = function(blueprint,override) { 
   this.positions={0:{x:90,y:100},1:{x:122,y:197},2:{x:153,y:292},3:{x:185,y:388}};
-  this.x = Game.width -  this.positions[Game.posPlayer].x ;
-  this.y = Game.height-this.positions[Game.posPlayer].y ;
+  this.merge(this.baseParameters);
+  this.setup(blueprint.sprite,blueprint);
+  this.merge(override);
+  this.x = Game.width -  this.positions[this.position].x ;
+  this.y = Game.height-this.positions[this.position].y ;
+};
+//Parametros base de "JUGADOR"
+Player.prototype.baseParameters = { position:0};
 
-  this.step = function(dt) {
-    if(Game.keys['up'] && Game.posPlayer<3){
-        Game.posPlayer++;
+Player.prototype = new Sprite();
+Player.prototype.type = OBJECT_PLAYER;
+Player.prototype.step= function(dt){
+    if(Game.keys['up'] && this.position<3){
+        this.position++;
         Game.keys['up'] = false;
-    }else if(Game.keys['down'] && Game.posPlayer>0){
-        Game.posPlayer--;
+    }else if(Game.keys['down'] && this.position>0){
+        this.position--;
         Game.keys['down'] = false;
     }
-    this.x = Game.width -  this.positions[Game.posPlayer].x ;
-    this.y = Game.height-this.positions[Game.posPlayer].y ;
+    this.x = Game.width -  this.positions[this.position].x ;
+    this.y = Game.height-this.positions[this.position].y ;
 
     var collision = this.board.collide(this,OBJECT_ENEMY_PROJECTILE);
     if(collision) {
@@ -148,15 +161,11 @@ var Player = function() {
 
     if(Game.keys['fire']) {
       Game.keys['fire'] = false;
-      var jarra=enemies["j1"];
-      var override={x:this.x,y:this.y};
+      //Creamos una jarra
+      var jarra=entidades["j1"], override={x:this.x,y:this.y};
       this.board.add(new Beer(jarra,override));
     }
-  };
 };
-
-Player.prototype = new Sprite();
-Player.prototype.type = OBJECT_PLAYER;
 /*-------------------------JARRA LLENA----------------------------------------*/
 var Beer = function(blueprint,override) {
   this.merge(this.baseParameters);
@@ -184,8 +193,8 @@ Beer.prototype.step = function(dt)  {
     collision.hit(this.damage);
     this.board.remove(this);
     Game.points += this.points || 100;
-    var jarra=enemies["j2"];
-    var override={x:this.x,y:this.y};
+    //Creamos una jarra vacia
+    var jarra=entidades["j2"], override={x:this.x,y:this.y};
     this.board.add(new Glass(jarra,override));
   }
 };

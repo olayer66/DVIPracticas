@@ -31,10 +31,7 @@ var Game = new function() {
   // Game Initialization
   this.initialize = function(canvasElementId,sprite_data,callback) {
     this.canvas = document.getElementById(canvasElementId);
-    this.posPlayer=0;//Posicion inicial del jugador
-    this.velJarra=2;//multiplicador de la velocidad de la jarras
     this.velAparicion=160;//multiplicador de la velocidad de aparacion de los enemigos
-    this.velEnemigo=2;//multiplicador de la velocidad del los enemigos
     this.canvasMultiplier= 1;
     this.setupMobile();
 
