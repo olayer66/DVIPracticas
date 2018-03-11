@@ -54,6 +54,8 @@ var playGame = function() {
   //Insertamos el jugador
   var jugador=entidades["pl"],override={};
   board.add(new Player(jugador,override));
+  board.add(new Spawner(override));
+
   board.add(new ParedCol());
   //Posiciones de los bloqueos de la puertas
   this.posPuerta={0:{x:5,y:112},1:{x:35,y:210},2:{x:70,y:305},3:{x:100,y:400}};
@@ -115,23 +117,16 @@ BloqDer.prototype.type=OBJECT_BLOQUEO_DER;
 /*---------------------------PARED IZQUIERDA----------------------------------*/
 var ParedCol=function(){
      this.setup('ParedIzda', { x: 0,y: 0});
-     this.tiempo=0;   
-     this.step=function (dt){
-         this.entra=dt*(Game.velAparicion);
-         if(this.tiempo>this.entra){
-            var enemy = entidades["e1"],override = { };
-            this.board.add(new Enemy(enemy,override));
-            this.tiempo=0;
-         }else
-             this.tiempo+=dt;  
-    };
- };
+     this.step=function(dt){};
+};
  ParedCol.prototype = new Sprite();
  ParedCol.prototype.type = OBJECT_PARED_IZQ;
  
 /*-----------------------------------JUGADOR----------------------------------*/
 var Player = function(blueprint,override) { 
   this.positions={0:{x:90,y:100},1:{x:122,y:197},2:{x:153,y:292},3:{x:185,y:388}};
+  this.reloadTime = 0.5; // un cuarto de segundo
+  this.reload = this.reloadTime;
   this.merge(this.baseParameters);
   this.setup(blueprint.sprite,blueprint);
   this.merge(override);
@@ -144,6 +139,7 @@ Player.prototype.baseParameters = { position:0};
 Player.prototype = new Sprite();
 Player.prototype.type = OBJECT_PLAYER;
 Player.prototype.step= function(dt){
+    this.reload-=dt;
     if(Game.keys['up'] && this.position<3){
         this.position++;
         Game.keys['up'] = false;
@@ -159,8 +155,9 @@ Player.prototype.step= function(dt){
       collision.hit(this.damage);
     }
 
-    if(Game.keys['fire']) {
+    if(Game.keys['fire'] && this.reload < 0) {
       Game.keys['fire'] = false;
+      this.reload = this.reloadTime;
       //Creamos una jarra
       var jarra=entidades["j1"], override={x:this.x,y:this.y};
       this.board.add(new Beer(jarra,override));
@@ -210,10 +207,10 @@ Beer.prototype.hit = function(damage) {
 /*--------------------------------CLIENTE-------------------------------------*/
 var Enemy = function(blueprint,override) {
   this.positions={0:{x:30,y:112},1:{x:65,y:210},2:{x:95,y:305},3:{x:125,y:400}};
-  var p= Math.floor((Math.random() * 4) + 0);
+  //var p= Math.floor((Math.random() * 4) + 0);
 
-  this.x =  this.positions[p].x ;
-  this.y = Game.height-this.positions[p].y ;
+  this.x = this.positions[override.p].x ;
+  this.y = Game.height-this.positions[override.p].y ;
 
   this.merge(this.baseParameters);
   this.setup(blueprint.sprite,blueprint);
@@ -287,6 +284,40 @@ Glass.prototype.step = function(dt)  {
      this.board.remove(this); 
   }
 };
+
+/*--------------------------------SPAWNER-------------------------------------*/
+var Spawner = function(override) {
+  //var blueprint =entidades["e1"];
+  //this.cl = new Enemy(blueprint,{p:0 });
+
+  this.velAparicion= override.velAparicion | 100;//multiplicador de la velocidad de aparacion de los enemigos
+  this.num=override.num | 50;
+  this.type=override.type | 0;
+  this.frec=override.frec | 10; //ms
+  this.retard=override.retard | 10; //ms
+  
+  this.tiempo=0; //contado del tiempo que se lleva
+  this.actuales=0; //contador de clientes que se han generado
+
+  this.step=function (dt){
+    var p= Math.floor((Math.random() * 4) + 0);
+
+    this.entra=dt*(this.velAparicion);
+    if(this.tiempo>this.entra && this.actuales<this.num){
+       var enemy = entidades["e1"],ov = {p: p };
+       this.board.add(new Enemy(enemy,ov));
+       //this.board.add(Object.create(this.cl));
+       this.tiempo=0;
+       this.actuales++;
+    }else
+        this.tiempo+=dt;  
+  };
+
+  this.draw  =function (ctx){};
+
+};
+
+//Spawner.prototype= new Sprite();
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 //Evento de inicio del juego

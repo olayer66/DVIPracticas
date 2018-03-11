@@ -31,7 +31,6 @@ var Game = new function() {
   // Game Initialization
   this.initialize = function(canvasElementId,sprite_data,callback) {
     this.canvas = document.getElementById(canvasElementId);
-    this.velAparicion=160;//multiplicador de la velocidad de aparacion de los enemigos
     this.canvasMultiplier= 1;
     this.setupMobile();
 
