@@ -217,6 +217,7 @@ var Beer = function(blueprint,override) {
   this.merge(this.baseParameters);
   this.setup(blueprint.sprite,blueprint);
   this.merge(override);
+  GameManager.modEstado(1,"cerveza");
 };
 
 Beer.prototype = new Sprite();
@@ -242,6 +243,7 @@ Beer.prototype.step = function(dt)  {
     //Creamos una jarra vacia
     var jarra=entidades["j2"], override={x:this.x,y:this.y};
     this.board.add(new Glass(jarra,override));
+    GameManager.modEstado(-1,"cerveza");
   }
 };
 Beer.prototype.hit = function(damage) {
@@ -264,6 +266,7 @@ var Enemy = function(blueprint,override) {
   this.merge(this.baseParameters);
   this.setup(blueprint.sprite,blueprint);
   this.merge(override);
+  GameManager.modEstado(1,"cliente");
 };
 
 Enemy.prototype = new Sprite();
@@ -286,12 +289,14 @@ Enemy.prototype.step = function(dt) {
   if(collision) {
     collision.hit(this.damage);
     this.board.remove(this);
-    loseGame();
+    GameManager.modEstado(-1,"vidasJugador");
+    //loseGame();
   }
   
   if(this.x < -this.w ||
      this.x > Game.width) {
        this.board.remove(this);
+       GameManager.modEstado(-1,"cliente");
   }
 };
 Enemy.prototype.hit = function(damage) {
@@ -304,6 +309,7 @@ var Glass = function(blueprint,override) {
   this.merge(this.baseParameters);
   this.setup(blueprint.sprite,blueprint);
   this.merge(override);
+  GameManager.modEstado(1,"jarraVacia");
 };
 
 Glass.prototype = new Sprite();
@@ -326,11 +332,11 @@ Glass.prototype.step = function(dt)  {
   if(collision) {
     Game.points += this.points || 100;
     this.board.remove(this);
+    GameManager.modEstado(-1,"jarraVacia");
   } else if(collisionBlq){
       this.board.remove(this);
-        loseGame();
-  } else if(this.y > Game.height) {
-     this.board.remove(this); 
+      GameManager.modEstado(-1,"vidasJugador");
+      //loseGame();
   }
 };
 
@@ -340,13 +346,15 @@ var Spawner = function(override) {
   //this.cl = new Enemy(blueprint,{p:0 });
 
   this.velAparicion= override.velAparicion | 100;//multiplicador de la velocidad de aparacion de los enemigos
-  this.num=override.num | 50;
+  this.num=override.num | 50; //maximo clientes
   this.type=override.type | 0;
   this.frec=override.frec | 10; //ms
   this.retard=override.retard | 10; //ms
   
   this.tiempo=0; //contado del tiempo que se lleva
   this.actuales=0; //contador de clientes que se han generado
+  GameManager.setMaxClientes(this.num);
+  GameManager.setVidasJugador(1);
 
   this.step=function (dt){
     var p= Math.floor((Math.random() * 4) + 0);
