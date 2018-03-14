@@ -28,6 +28,55 @@ var OBJECT_FONDO = 1,
     OBJECT_PLAYER_PROJECTILE = 32,
     OBJECT_ENEMY = 64,
     OBJECT_ENEMY_PROJECTILE = 128;
+//Gestor del juego
+var GameManager= new function(){
+    //Variables de juego
+    this.cerveza=0;//jarras de cerveza en pantalla
+    this.jarraVacia=0;//jarras vacias en pantalla
+    this.cliente=0;//clientes jugados
+    this.maxClientes;//Maximo de clientes en el nivel
+    this.vidasJugador=1;
+    /*
+     * @description Modifica el estado de la variable pasada
+     * @param {number} accion 
+     * @param {string} elem 
+    */
+    this.modEstado=function(accion,elem){
+        switch(elem){
+            case "cerveza":
+                this.cerveza+=accion;
+            case "jarraVacia":
+                this.jarraVacia+=accion;
+            case "cliente":
+                this.cliente+=accion;
+            case "vidasJugador":
+                this.maxClientes+=accion;
+            default:
+                console.log("Elemento no valido listillo");
+        };
+    };
+    /*
+     * Indica el numero de vidas que tiene un jugador
+     * @param {number} nVidas
+     */
+    this.setVidasJugador=function(nVidas){
+        this.vidasJugador=nVidas;
+    };
+    /*
+     * Indica el numero de clientes del nivel
+     * @param {number} maxClientes
+     */
+    this.setMaxClientes=function(maxClientes){
+        this.maxClientes=maxClientes;
+    };
+    //Comprueba el estado del juego
+    this.estado=function(){
+        if(this.jarraVacia===0 && this.cliente===this.maxClientes)
+            winGame();
+        if(this.vidasJugador===0)
+            loseGame();
+    };
+};
 
 //Inicio del juego
 var startGame = function() {
