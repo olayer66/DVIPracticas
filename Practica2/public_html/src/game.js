@@ -251,6 +251,7 @@ Beer.prototype.step = function(dt)  {
     var jarra=entidades["j2"], override={x:this.x,y:this.y};
     this.board.add(new Glass(jarra,override));
     GameManager.modEstado(-1,"cerveza");
+    GameManager.modEstado(-1,"cliente");
   }
 };
 Beer.prototype.hit = function(damage) {
@@ -353,7 +354,7 @@ var Spawner = function(override) {
   //this.cl = new Enemy(blueprint,{p:0 });
 
   this.velAparicion= override.velAparicion | 100;//multiplicador de la velocidad de aparacion de los enemigos
-  this.num=override.num | 50; //maximo clientes
+  this.num=override.num | 10; //maximo clientes
   this.type=override.type | 0;
   this.frec=override.frec | 10; //ms
   this.retard=override.retard | 10; //ms
