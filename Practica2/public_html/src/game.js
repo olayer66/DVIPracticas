@@ -240,13 +240,14 @@ Beer.prototype.step = function(dt)  {
 
   this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
   this.vy = 0;
-
+  this.points=50;
+  
   this.x -= this.vx*dt;
   var collision = this.board.collide(this,OBJECT_ENEMY);
   if(collision) {
     collision.hit(this.damage);
     this.board.remove(this);
-    Game.points += this.points || 100;
+    Game.points += this.points || 50;
     //Creamos una jarra vacia
     var jarra=entidades["j2"], override={x:this.x,y:this.y};
     this.board.add(new Glass(jarra,override));
@@ -334,6 +335,8 @@ Glass.prototype.step = function(dt)  {
   this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
   this.vy = 0;
   this.x += this.vx*dt;
+  this.points=100;
+  
   //Colisiones
   var collision = this.board.collide(this,OBJECT_PLAYER);
   var collisionBlq = this.board.collide(this,OBJECT_BLOQUEO_DER);
