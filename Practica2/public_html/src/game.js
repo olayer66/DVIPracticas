@@ -36,6 +36,7 @@ var GameManager= new function(){
     this.cliente=0;//clientes jugados
     this.maxClientes;//Maximo de clientes en el nivel
     this.vidasJugador=1;
+    this.clientesServidos=0;
     /*
      * @description Modifica el estado de la variable pasada
      * @param {number} accion 
@@ -45,15 +46,21 @@ var GameManager= new function(){
         switch(elem){
             case "cerveza":
                 this.cerveza+=accion;
+                break;
             case "jarraVacia":
                 this.jarraVacia+=accion;
+                break;
             case "cliente":
                 this.cliente+=accion;
+                if(accion<0) this.clientesServidos+=1;
+                break;
             case "vidasJugador":
-                this.maxClientes+=accion;
+                this.vidasJugador+=accion;
+                break;
             default:
                 console.log("Elemento no valido listillo");
         };
+        this.estado();
     };
     /*
      * Indica el numero de vidas que tiene un jugador
@@ -71,7 +78,7 @@ var GameManager= new function(){
     };
     //Comprueba el estado del juego
     this.estado=function(){
-        if(this.jarraVacia===0 && this.cliente===this.maxClientes)
+        if(this.jarraVacia===0 && this.cliente===0 && this.clientesServidos===this.maxClientes)
             winGame();
         if(this.vidasJugador===0)
             loseGame();
