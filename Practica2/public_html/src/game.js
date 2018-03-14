@@ -18,7 +18,17 @@ var entidades = {
   j1: {sprite: 'Beer', health: 1, A: 100},//Jarra llena
   j2: {sprite: 'Glass', health: 1, A: 100}//Jarra vacia
 };
-
+/*
+ * Array que contiene la informacion para los niveles
+ * @example nivel:{numEnemigos,vidasJugador,vel. cliente,vel. jarra, vel. spawn} 
+ * @returns {datosNivel} 
+ */
+var niveles = { 
+  1:{nClientes:8,nVidas:4,velCliente:1,velJarra:1,velSpawn:1},
+  2:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:1},
+  3:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:1.5},
+  4:{nClientes:24,nVidas:3,velCliente:1,velJarra:1,velSpawn:1.5}
+  };
 //Variables de control de las colisiones
 var OBJECT_FONDO = 1,
     OBJECT_PARED_IZQ=2,
@@ -28,15 +38,19 @@ var OBJECT_FONDO = 1,
     OBJECT_PLAYER_PROJECTILE = 32,
     OBJECT_ENEMY = 64,
     OBJECT_ENEMY_PROJECTILE = 128;
+    
 //Gestor del juego
 var GameManager= new function(){
     //Variables de juego
     this.cerveza=0;//jarras de cerveza en pantalla
     this.jarraVacia=0;//jarras vacias en pantalla
     this.cliente=0;//clientes jugados
-    this.maxClientes;//Maximo de clientes en el nivel
-    this.vidasJugador=1;
-    this.clientesServidos=0;
+    this.clientesServidos=0;//Num de clientes servidos
+    //Variables de nivel
+    this.nivel=1;//Nivel de la partida
+    this.maxClientes=0;//Maximo de clientes en el nivel
+    this.vidasJugador=1;//Vidas del jugador antes de perder
+    
     /*
      * @description Modifica el estado de la variable pasada
      * @param {number} accion 
@@ -76,12 +90,30 @@ var GameManager= new function(){
     this.setMaxClientes=function(maxClientes){
         this.maxClientes=maxClientes;
     };
-    //Comprueba el estado del juego
+    /*
+     * Establece el nivel de la partida
+     * @param {number} nivel 
+     */
+    this.setNivel= function (nivel){
+        this.nivel=nivel;
+    };
+    /*
+     * Comprueba el estado del juego
+     */
     this.estado=function(){
         if(this.jarraVacia===0 && this.cliente===0 && this.clientesServidos===this.maxClientes)
             winGame();
         if(this.vidasJugador===0)
             loseGame();
+    };
+    /*
+     * Resetea las variables de juego cuando se inicia un nuevo nivel
+     */
+    this.resetNivel=function(){
+        this.cerveza=0;
+        this.cliente=0;
+        this.clientesServidos=0;
+        this.jarraVacia=0;
     };
 };
 
@@ -90,18 +122,6 @@ var startGame = function() {
     Game.setBoard(0,new Fondo());
     Game.setBoard(1,new TitleScreen("Tapper", "Presiona espacio para empezar",playGame));
 };
-
-var level1 = [
- // Start,   End, Gap,  Type,   Override
-  [ 0,      4000,  500, 'step' ],
-  [ 6000,   13000, 800, 'ltr' ],
-  [ 10000,  16000, 400, 'circle' ],
-  [ 17800,  20000, 500, 'straight', { x: 50 } ],
-  [ 18200,  20000, 500, 'straight', { x: 90 } ],
-  [ 18200,  20000, 500, 'straight', { x: 10 } ],
-  [ 22000,  25000, 400, 'wiggle', { x: 150 }],
-  [ 22000,  25000, 400, 'wiggle', { x: 100 }]
-];
 
 //Inicio del partida
 var playGame = function() {
@@ -124,8 +144,8 @@ var playGame = function() {
       //Fin de barra
       board.add(new BloqDer(Game.width-this.posFinBarra[i].x,Game.height-this.posFinBarra[i].y));
   }
-  
-  //board.add(new Level(level1,winGame));
+  //Generacion del nivel
+  board.add(new GenNiveles(niveles[GameManager.nivel],winGame));
   Game.setBoard(2,board);
   Game.setBoard(3,new GamePoints(0));
 };
@@ -139,7 +159,14 @@ var loseGame = function() {
   Game.stopBoard();
   Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar", playGame));
 };
-
+/*-------------------------GENERADOR DE NIVELES-------------------------------*/
+var GenNiveles=function(config,callback){
+    
+};
+GenNiveles.prototype.draw=function(ctx){};
+GenNiveles.prototype.step=function(dt){
+    
+};
 /*----------------------------FONDO PANTALLA----------------------------------*/
 var Fondo=function(){
     this.setup('TapperGameplay', { x: 0,y: 0}); 
