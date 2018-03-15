@@ -20,14 +20,14 @@ var entidades = {
 };
 /*
  * Array que contiene la informacion para los niveles
- * @example nivel:{numEnemigos,vidasJugador,vel. cliente,vel. jarra, vel. spawn} 
+ * @example nivel:{numEnemigos,vidasJugador,vel. cliente,vel. jarra, vel. spawn(en ms)} 
  * @returns {datosNivel} 
  */
 var niveles = { 
-  1:{nClientes:8,nVidas:4,velCliente:1,velJarra:1,velSpawn:1},
-  2:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:1},
-  3:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:1.5},
-  4:{nClientes:24,nVidas:3,velCliente:1,velJarra:1,velSpawn:1.5}
+  1:{nClientes:8,nVidas:4,velCliente:1,velJarra:1,velSpawn:100},
+  2:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:1000},
+  3:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:800},
+  4:{nClientes:24,nVidas:3,velCliente:1,velJarra:1,velSpawn:800}
   };
 //Variables de control de las colisiones
 var OBJECT_FONDO = 1,
@@ -45,7 +45,7 @@ var GameManager= new function(){
     this.cerveza=0;//jarras de cerveza en pantalla
     this.jarraVacia=0;//jarras vacias en pantalla
     this.cliente=0;//clientes jugados
-    this.clientesServidos=0;//Num de clientes servidos
+    this.finNivel=false;//Clientes servidos
     //Variables de nivel
     this.nivel=1;//Nivel de la partida
     this.maxClientes=0;//Maximo de clientes en el nivel
@@ -66,7 +66,6 @@ var GameManager= new function(){
                 break;
             case "cliente":
                 this.cliente+=accion;
-                if(accion<0) this.clientesServidos+=1;
                 break;
             case "vidasJugador":
                 this.vidasJugador+=accion;
@@ -101,7 +100,7 @@ var GameManager= new function(){
      * Comprueba el estado del juego
      */
     this.estado=function(){
-        if(this.jarraVacia===0 && this.cliente===0 && this.clientesServidos===this.maxClientes)
+        if(this.jarraVacia===0 && this.cliente===0 && this.finNivel)
             winGame();
         if(this.vidasJugador===0)
             loseGame();
@@ -112,7 +111,7 @@ var GameManager= new function(){
     this.resetNivel=function(){
         this.cerveza=0;
         this.cliente=0;
-        this.clientesServidos=0;
+        this.finNivel=false;
         this.jarraVacia=0;
     };
 };
@@ -130,7 +129,6 @@ var playGame = function() {
   //Insertamos el jugador
   var jugador=entidades["pl"],override={};
   board.add(new Player(jugador,override));
-  board.add(new Spawner(override));
 
   board.add(new ParedCol());
   //Posiciones de los bloqueos de la puertas
@@ -145,7 +143,7 @@ var playGame = function() {
       board.add(new BloqDer(Game.width-this.posFinBarra[i].x,Game.height-this.posFinBarra[i].y));
   }
   //Generacion del nivel
-  board.add(new GenNiveles(niveles[GameManager.nivel],winGame));
+  board.add(new GenNiveles(niveles[GameManager.nivel],GameManager.estado()));
   Game.setBoard(2,board);
   Game.setBoard(3,new GamePoints(0));
 };
@@ -161,11 +159,30 @@ var loseGame = function() {
 };
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
-    
+    GameManager.resetNivel();
+    this.velAparicion= config.velSpawn;//multiplicador de la velocidad de aparacion de los enemigos
+    this.num=config.nClientes; //maximo clientes
+    this.tiempo=0; //contado del tiempo que se lleva
+    this.actuales=0; //contador de clientes que se han generado
+
+    GameManager.setMaxClientes(this.num);
+    GameManager.setVidasJugador(config.nVidas);
 };
 GenNiveles.prototype.draw=function(ctx){};
 GenNiveles.prototype.step=function(dt){
-    
+    var p= Math.floor((Math.random() * 4) + 0);
+
+    this.entra=dt*(this.velAparicion);
+    if(this.actuales<this.num){
+        if(this.tiempo>this.entra){
+           var enemy = entidades["e1"],ov = {p: p };
+           this.board.add(new Enemy(enemy,ov));
+           this.tiempo=0;
+           this.actuales++;
+        }else
+            this.tiempo+=dt;  
+    }else
+        GameManager.finNivel=true;
 };
 /*----------------------------FONDO PANTALLA----------------------------------*/
 var Fondo=function(){
@@ -178,13 +195,7 @@ var Fondo=function(){
 /*---------------------------BLOQUEO IZQUIERDO--------------------------------*/
 var BloqIzq=function(x,y){
     this.setup(x,y);
-    this.step=function(dt){
-        var collision = this.board.collide(this,OBJECT_PLAYER_PROJECTILE);
-        if(collision){
-            this.board.remove(this);
-            loseGame();
-        }         
-    };
+    this.step=function(dt){};
 };
 BloqIzq.prototype=new Bloqueo();
 BloqIzq.prototype.type=OBJECT_BLOQUEO_IZQ;
@@ -233,11 +244,6 @@ Player.prototype.step= function(dt){
     this.x = Game.width -  this.positions[this.position].x ;
     this.y = Game.height-this.positions[this.position].y ;
 
-    var collision = this.board.collide(this,OBJECT_ENEMY_PROJECTILE);
-    if(collision) {
-      collision.hit(this.damage);
-    }
-
     if(Game.keys['fire'] && this.reload < 0) {
       Game.keys['fire'] = false;
       this.reload = this.reloadTime;
@@ -270,6 +276,7 @@ Beer.prototype.step = function(dt)  {
   this.points=50;
   
   this.x -= this.vx*dt;
+  var collisionBloq = this.board.collide(this,OBJECT_BLOQUEO_IZQ);//Fin de barra
   var collision = this.board.collide(this,OBJECT_ENEMY);
   if(collision) {
     collision.hit(this.damage);
@@ -279,15 +286,10 @@ Beer.prototype.step = function(dt)  {
     var jarra=entidades["j2"], override={x:this.x,y:this.y};
     this.board.add(new Glass(jarra,override));
     GameManager.modEstado(-1,"cerveza");
-    GameManager.modEstado(-1,"cliente");
-  }
-};
-Beer.prototype.hit = function(damage) {
-  this.health -= damage;
-  if(this.health <=0) {
-    if(this.board.remove(this)) {
-      
-    }
+  }else if(collisionBloq) {
+    this.board.remove(this);
+    GameManager.modEstado(-1,"cerveza");
+    GameManager.modEstado(-1,"vidasJugador");
   }
 };
 
@@ -323,21 +325,19 @@ Enemy.prototype.step = function(dt) {
 
   var collision = this.board.collide(this,OBJECT_BLOQUEO_DER);//Fin de barra
   if(collision) {
-    collision.hit(this.damage);
     this.board.remove(this);
     GameManager.modEstado(-1,"vidasJugador");
-    //loseGame();
   }
-  
-  if(this.x < -this.w ||
+  //neceario??
+  /*if(this.x < -this.w ||
      this.x > Game.width) {
        this.board.remove(this);
        GameManager.modEstado(-1,"cliente");
-  }
+  }*/
 };
 Enemy.prototype.hit = function(damage) {
-  this.health -= damage;
   this.board.remove(this);
+  GameManager.modEstado(-1,"cliente");
 };
 
 /*--------------------------------JARRA VACIA---------------------------------*/
@@ -373,46 +373,11 @@ Glass.prototype.step = function(dt)  {
     GameManager.modEstado(-1,"jarraVacia");
   } else if(collisionBlq){
       this.board.remove(this);
+      GameManager.modEstado(-1,"jarraVacia");
       GameManager.modEstado(-1,"vidasJugador");
       //loseGame();
   }
 };
-
-/*--------------------------------SPAWNER-------------------------------------*/
-var Spawner = function(override) {
-  //var blueprint =entidades["e1"];
-  //this.cl = new Enemy(blueprint,{p:0 });
-
-  this.velAparicion= override.velAparicion | 100;//multiplicador de la velocidad de aparacion de los enemigos
-  this.num=override.num | 10; //maximo clientes
-  this.type=override.type | 0;
-  this.frec=override.frec | 10; //ms
-  this.retard=override.retard | 10; //ms
-  
-  this.tiempo=0; //contado del tiempo que se lleva
-  this.actuales=0; //contador de clientes que se han generado
-  GameManager.setMaxClientes(this.num);
-  GameManager.setVidasJugador(1);
-
-  this.step=function (dt){
-    var p= Math.floor((Math.random() * 4) + 0);
-
-    this.entra=dt*(this.velAparicion);
-    if(this.tiempo>this.entra && this.actuales<this.num){
-       var enemy = entidades["e1"],ov = {p: p };
-       this.board.add(new Enemy(enemy,ov));
-       //this.board.add(Object.create(this.cl));
-       this.tiempo=0;
-       this.actuales++;
-    }else
-        this.tiempo+=dt;  
-  };
-
-  this.draw  =function (ctx){};
-
-};
-
-//Spawner.prototype= new Sprite();
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 //Evento de inicio del juego
