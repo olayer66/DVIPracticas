@@ -70,6 +70,9 @@ var GameManager= new function(){
             case "vidasJugador":
                 this.vidasJugador+=accion;
                 break;
+            case "finNivel":
+                this.finNivel=true;
+                break;
             default:
                 console.log("Elemento no valido listillo");
         };
@@ -164,9 +167,10 @@ var GenNiveles=function(config,callback){
     this.num=config.nClientes; //maximo clientes
     this.tiempo=0; //contado del tiempo que se lleva
     this.actuales=0; //contador de clientes que se han generado
-
+    this.callback=callback;
     GameManager.setMaxClientes(this.num);
     GameManager.setVidasJugador(config.nVidas);
+    
 };
 GenNiveles.prototype.draw=function(ctx){};
 GenNiveles.prototype.step=function(dt){
@@ -181,8 +185,10 @@ GenNiveles.prototype.step=function(dt){
            this.actuales++;
         }else
             this.tiempo+=dt;  
+    }else if(!GameManager.finNivel){
+        GameManager.modEstado(0,"finNivel");
     }else
-        GameManager.finNivel=true;
+        console.log("fin Spawn");
 };
 /*----------------------------FONDO PANTALLA----------------------------------*/
 var Fondo=function(){
@@ -327,6 +333,7 @@ Enemy.prototype.step = function(dt) {
   if(collision) {
     this.board.remove(this);
     GameManager.modEstado(-1,"vidasJugador");
+    GameManager.modEstado(-1,"cliente");
   }
   //neceario??
   /*if(this.x < -this.w ||
