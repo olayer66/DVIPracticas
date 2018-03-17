@@ -33,7 +33,6 @@ var Game = new function() {
     this.canvas = document.getElementById(canvasElementId);
     this.canvasMultiplier= 1;
     this.setupMobile();
-
     this.width = this.canvas.width;
     this.height= this.canvas.height;
 
@@ -164,7 +163,7 @@ var SpriteSheet = new function() {
   return this;
 };
 
-var TitleScreen = function TitleScreen(title,subtitle,callback) {
+var TitleScreen = function TitleScreen(title,subtitle,nivel,callback) {
   var up = false;
   this.step = function(dt) {
     if(!Game.keys['fire']) up = true;
@@ -181,10 +180,13 @@ var TitleScreen = function TitleScreen(title,subtitle,callback) {
     ctx.font = "bold 40px bangers";
     var measure = ctx.measureText(title);  
     ctx.fillText(title,Game.width/2 - measure.width/2,Game.height/2);
-
+    
     ctx.font = "bold 20px bangers";
     var measure2 = ctx.measureText(subtitle);
-    ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
+    if(nivel!==0)
+        ctx.fillText(subtitle+" "+nivel,Game.width/2 - measure2.width/2,Game.height/2 + 40);
+    else
+        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
   };
 };
 
@@ -451,8 +453,8 @@ var TouchControls = function() {
 };
 
 
-var GamePoints = function() {
-  Game.points = 0;
+var GamePoints = function(puntos) {
+  Game.points = puntos;
 
   var pointsLength = 8;
 

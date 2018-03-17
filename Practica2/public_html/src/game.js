@@ -23,11 +23,11 @@ var entidades = {
  * @example nivel:{numEnemigos,vidasJugador,vel. cliente,vel. jarra, vel. spawn(en ms)} 
  * @returns {datosNivel} 
  */
-var niveles = { 
+var niveles = {//Si se modifica el numero de nieveles cambiar el parametro en el GameManager 
   1:{nClientes:8,nVidas:4,velCliente:1,velJarra:1,velSpawn:100},
-  2:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:1000},
-  3:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:800},
-  4:{nClientes:24,nVidas:3,velCliente:1,velJarra:1,velSpawn:800}
+  2:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:100},
+  3:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:80},
+  4:{nClientes:24,nVidas:3,velCliente:1,velJarra:1,velSpawn:80}
   };
 //Variables de control de las colisiones
 var OBJECT_FONDO = 1,
@@ -42,10 +42,12 @@ var OBJECT_FONDO = 1,
 //Gestor del juego
 var GameManager= new function(){
     //Variables de juego
+    this.maxNivel=4;//Numero maximo de niveles
     this.cerveza=0;//jarras de cerveza en pantalla
     this.jarraVacia=0;//jarras vacias en pantalla
     this.cliente=0;//clientes jugados
     this.finNivel=false;//Clientes servidos
+    this.puntos=0//Puntuacion del jugador
     //Variables de nivel
     this.nivel=1;//Nivel de la partida
     this.maxClientes=0;//Maximo de clientes en el nivel
@@ -117,48 +119,63 @@ var GameManager= new function(){
         this.finNivel=false;
         this.jarraVacia=0;
     };
+    /*
+     * @description Reinicia la puntuacion del jugador
+     */
+    this.resetPuntos=function(){
+        this.puntos=0;
+    };
 };
 
 //Inicio del juego
 var startGame = function() {
     Game.setBoard(0,new Fondo());
-    Game.setBoard(1,new TitleScreen("Tapper", "Presiona espacio para empezar",playGame));
+    Game.setBoard(1,new TitleScreen("Tapper", "Presiona espacio para empezar",0,playGame));
 };
 
 //Inicio del partida
 var playGame = function() {
-  Game.setBoard(1,new Fondo());
-  var board = new GameBoard();
-  //Insertamos el jugador
-  var jugador=entidades["pl"],override={};
-  board.add(new Player(jugador,override));
+    Game.setBoard(1,new Fondo());
+    
+    //Generacion del board
+    var board = new GameBoard();
+    //Insertamos el jugador
+    var jugador=entidades["pl"],override={};
+    board.add(new Player(jugador,override));
 
-  board.add(new ParedCol());
-  //Posiciones de los bloqueos de la puertas
-  this.posPuerta={0:{x:5,y:112},1:{x:35,y:210},2:{x:70,y:305},3:{x:100,y:400}};
-  //Posiciones de los bloqueos de los findes de barra
-  this.posFinBarra={0:{x:80,y:100},1:{x:112,y:197},2:{x:143,y:292},3:{x:175,y:388}};
-  for(var i=0;i<4;i++){
-      var bloqueo;
-      //Puertas
-      board.add(new BloqIzq(this.posPuerta[i].x,Game.height-this.posPuerta[i].y));
-      //Fin de barra
-      board.add(new BloqDer(Game.width-this.posFinBarra[i].x,Game.height-this.posFinBarra[i].y));
-  }
-  //Generacion del nivel
-  board.add(new GenNiveles(niveles[GameManager.nivel],GameManager.estado()));
-  Game.setBoard(2,board);
-  Game.setBoard(3,new GamePoints(0));
+    board.add(new ParedCol());
+    //Posiciones de los bloqueos de la puertas
+    this.posPuerta={0:{x:5,y:112},1:{x:35,y:210},2:{x:70,y:305},3:{x:100,y:400}};
+    //Posiciones de los bloqueos de los findes de barra
+    this.posFinBarra={0:{x:80,y:100},1:{x:112,y:197},2:{x:143,y:292},3:{x:175,y:388}};
+    for(var i=0;i<4;i++){
+        var bloqueo;
+        //Puertas
+        board.add(new BloqIzq(this.posPuerta[i].x,Game.height-this.posPuerta[i].y));
+        //Fin de barra
+        board.add(new BloqDer(Game.width-this.posFinBarra[i].x,Game.height-this.posFinBarra[i].y));
+    }
+    //Generacion del nivel
+    board.add(new GenNiveles(niveles[GameManager.nivel],GameManager.estado()));
+    Game.setBoard(2,board);
+    Game.setBoard(3,new GamePoints(GameManager.puntos));
 };
 //Partida ganada
 var winGame = function() {
   Game.stopBoard();
-  Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",  playGame));                           
+  if(GameManager.nivel<=GameManager.maxNivel){
+      GameManager.nivel++;
+      Game.setBoard(3,new TitleScreen("Nivel superado!", "Presiona espacio para iniciar el nivel",GameManager.nivel,playGame));
+      
+  }else
+    Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",0, playGame));                           
 };
 //Partida perida
 var loseGame = function() {
   Game.stopBoard();
-  Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar", playGame));
+  GameManager.nivel=1;
+  GameManager.puntos=0;
+  Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar",0, playGame));
 };
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
@@ -288,6 +305,7 @@ Beer.prototype.step = function(dt)  {
     collision.hit(this.damage);
     this.board.remove(this);
     Game.points += this.points || 50;
+    GameManager.puntos += this.points || 50;
     //Creamos una jarra vacia
     var jarra=entidades["j2"], override={x:this.x,y:this.y};
     this.board.add(new Glass(jarra,override));
@@ -376,6 +394,7 @@ Glass.prototype.step = function(dt)  {
   var collisionBlq = this.board.collide(this,OBJECT_BLOQUEO_DER);
   if(collision) {
     Game.points += this.points || 100;
+    GameManager.puntos += this.points || 100;
     this.board.remove(this);
     GameManager.modEstado(-1,"jarraVacia");
   } else if(collisionBlq){
