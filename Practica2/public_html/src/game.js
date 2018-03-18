@@ -53,6 +53,14 @@ var GameManager= new function(){
     this.maxClientes=0;//Maximo de clientes en el nivel
     this.vidasJugador=1;//Vidas del jugador antes de perder
     
+    this.maxPuntTapper=0;//Variable que contiene la puntuacion maxima del juego
+    //Extraemos la puntuacion maxima del navegador
+    if(localStorage.getItem("maxPuntTapper"))
+        this.maxPuntTapper=localStorage.getItem("maxPuntTapper");
+    else{
+        this.maxPuntTapper=localStorage.setItem("maxPuntTapper",0);
+    }
+    
     /*
      * @description Modifica el estado de la variable pasada
      * @param {number} accion 
@@ -125,12 +133,22 @@ var GameManager= new function(){
     this.resetPuntos=function(){
         this.puntos=0;
     };
+    /*
+     * Comprueba si la puntuacion alcanzada es mayor que la maxima puntuacion obtenida del localStorage
+     * @param {number} maxPunt
+     */
+    this.setMaxPuntTapper=function(){
+        if(this.maxPuntTapper<this.puntos){
+            this.maxPuntTapper=localStorage.setItem("maxPuntTapper",this.puntos);
+            this.maxPuntTapper=this.puntos;
+        }
+    };
 };
 
 //Inicio del juego
 var startGame = function() {
     Game.setBoard(0,new Fondo());
-    Game.setBoard(1,new TitleScreen("Tapper", "Presiona espacio para empezar",0,playGame));
+    Game.setBoard(1,new TitleScreen("Tapper", "Presiona espacio para empezar",0,GameManager.maxPuntTapper,playGame));
 };
 
 //Inicio del partida
@@ -165,17 +183,18 @@ var winGame = function() {
   Game.stopBoard();
   if(GameManager.nivel<=GameManager.maxNivel){
       GameManager.nivel++;
-      Game.setBoard(3,new TitleScreen("Nivel superado!", "Presiona espacio para iniciar el nivel",GameManager.nivel,playGame));
+      Game.setBoard(3,new TitleScreen("Nivel superado!", "Presiona espacio para iniciar el nivel",GameManager.nivel,0,playGame));
       
   }else
-    Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",0, playGame));                           
+    Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",0,0,playGame));                           
 };
 //Partida perida
 var loseGame = function() {
   Game.stopBoard();
+  GameManager.setMaxPuntTapper();
   GameManager.nivel=1;
   GameManager.puntos=0;
-  Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar",0, playGame));
+  Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar",0,0,playGame));
 };
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){

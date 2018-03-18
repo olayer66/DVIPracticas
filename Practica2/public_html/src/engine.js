@@ -30,6 +30,7 @@ var Game = new function() {
 
   // Game Initialization
   this.initialize = function(canvasElementId,sprite_data,callback) {
+      
     this.canvas = document.getElementById(canvasElementId);
     this.canvasMultiplier= 1;
     this.setupMobile();
@@ -38,7 +39,6 @@ var Game = new function() {
 
     this.ctx = this.canvas.getContext && this.canvas.getContext('2d');
     if(!this.ctx) { return alert("Please upgrade your browser to play"); }
-
     this.setupInput();
 
     this.loop(); 
@@ -163,7 +163,7 @@ var SpriteSheet = new function() {
   return this;
 };
 
-var TitleScreen = function TitleScreen(title,subtitle,nivel,callback) {
+var TitleScreen = function TitleScreen(title,subtitle,nivel,maxPunt,callback) {
   var up = false;
   this.step = function(dt) {
     if(!Game.keys['fire']) up = true;
@@ -185,8 +185,14 @@ var TitleScreen = function TitleScreen(title,subtitle,nivel,callback) {
     var measure2 = ctx.measureText(subtitle);
     if(nivel!==0)
         ctx.fillText(subtitle+" "+nivel,Game.width/2 - measure2.width/2,Game.height/2 + 40);
-    else
-        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
+    else{
+        if(maxPunt!==0){
+            ctx.fillText("Puntuacion maxima "+ maxPunt +" pts",Game.width/2 - measure2.width/2,Game.height/2 + 40);
+            ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 80);
+        }else
+            ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
+    }
+        
   };
 };
 
@@ -455,7 +461,6 @@ var TouchControls = function() {
 
 var GamePoints = function(puntos) {
   Game.points = puntos;
-
   var pointsLength = 8;
 
   this.draw = function(ctx) {
