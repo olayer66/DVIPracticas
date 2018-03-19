@@ -148,9 +148,24 @@ var GameManager= new function(){
 //Inicio del juego
 var startGame = function() {
     Game.setBoard(0,new Fondo());
-    Game.setBoard(1,new TitleScreen("Tapper", "Presiona espacio para empezar",0,GameManager.maxPuntTapper,playGame));
+    Game.setBoard(1,new TitleScreen("Tapper", "Presiona espacio para empezar",0,GameManager.maxPuntTapper,playGame,cargaTabla));
 };
-
+//carga la tabla
+var cargaTabla=function(){
+    var tabla=[];
+    $.getJSON("src/laTabla.json")       
+    .done(function( data, textStatus, jqXHR ) {
+            $.each( data, function( key, val ) {
+              tabla[key]=val;
+            });
+            Game.setBoard(0,new Fondo());
+            Game.setBoard(1,new laTabla(tabla,startGame));
+    })
+    .fail(function( jqXHR, textStatus, errorThrown ) {
+            alert("Error de carga");
+            startGame();
+    });
+};
 //Inicio del partida
 var playGame = function() {
     Game.setBoard(1,new Fondo());
@@ -183,10 +198,11 @@ var winGame = function() {
   Game.stopBoard();
   if(GameManager.nivel<=GameManager.maxNivel){
       GameManager.nivel++;
-      Game.setBoard(3,new TitleScreen("Nivel superado!", "Presiona espacio para iniciar el nivel",GameManager.nivel,0,playGame));
+      
+      Game.setBoard(3,new TitleScreen("Nivel superado!", "Presiona espacio para iniciar el nivel",GameManager.nivel,0,playGame,cargaTabla));
       
   }else
-    Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",0,0,playGame));                           
+    Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",0,0,playGame,cargaTabla));                           
 };
 //Partida perida
 var loseGame = function() {
@@ -194,7 +210,7 @@ var loseGame = function() {
   GameManager.setMaxPuntTapper();
   GameManager.nivel=1;
   GameManager.puntos=0;
-  Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar",0,0,playGame));
+  Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar",0,0,playGame,cargaTabla));
 };
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){

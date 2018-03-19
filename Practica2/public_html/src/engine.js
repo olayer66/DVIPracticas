@@ -52,7 +52,7 @@ var Game = new function() {
   
 
   // Handle Input
-  var KEY_CODES = { 38:'up', 40:'down', 32 :'fire' };
+  var KEY_CODES = { 38:'up', 40:'down', 32 :'fire',13:'enter'};
   this.keys = {};
 
   this.setupInput = function() {
@@ -163,13 +163,18 @@ var SpriteSheet = new function() {
   return this;
 };
 
-var TitleScreen = function TitleScreen(title,subtitle,nivel,maxPunt,callback) {
+var TitleScreen = function TitleScreen(title,subtitle,nivel,maxPunt,callback,callback2) {
   var up = false;
   this.step = function(dt) {
     if(!Game.keys['fire']) up = true;
     if(up && Game.keys['fire'] && callback) {
         Game.keys['fire']=false;
         callback();
+    }
+    if(!Game.keys['enter']) up = true;
+    if(up && Game.keys['enter'] && callback2) {
+        Game.keys['enter']=false;
+        callback2();
     }
   };
 
@@ -189,6 +194,7 @@ var TitleScreen = function TitleScreen(title,subtitle,nivel,maxPunt,callback) {
         if(maxPunt!==0){
             ctx.fillText("Puntuacion maxima "+ maxPunt +" pts",Game.width/2 - measure2.width/2,Game.height/2 + 40);
             ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 80);
+            ctx.fillText("Pulsa Enter para ver la Tabla",Game.width/2 - measure2.width/2,Game.height/2 + 120);
         }else
             ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
     }
@@ -478,4 +484,28 @@ var GamePoints = function(puntos) {
   };
 
   this.step = function(dt) { };
+};
+var laTabla=function laTabla(tabla,callback){
+  var up = false;
+  this.tabla=tabla;
+  this.step = function(dt) {
+    if(!Game.keys['fire']) up = true;
+    if(up && Game.keys['fire'] && callback) {
+        Game.keys['fire']=false;
+        callback();
+    }
+  };
+
+  this.draw = function(ctx) {
+    // Foreground
+    ctx.fillStyle = "#FFFFFF";
+    this.title="Tabla de puntuaciones";
+    ctx.font = "bold 40px bangers";
+    var measure = ctx.measureText(this.title);  
+    ctx.fillText(this.title,Game.width/2 - measure.width/2,40);
+    ctx.font = "bold 30px bangers";
+    for(var i=0;i<this.tabla.length;i++)
+        ctx.fillText(i+1+"\u0029 "+this.tabla[i].name+" "+this.tabla[i].puntos+" pts",Game.width/2 - measure.width/2,60+(30*(i+1)));
+        ctx.fillText("Pulsa espacio para volver",Game.width/2 - measure.width/2,Game.height - 20);
+  };
 };
