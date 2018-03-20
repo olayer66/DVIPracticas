@@ -144,31 +144,54 @@ var GameManager= new function(){
         }
     };
 };
-
+//Manager de la tabla
+var TableManager= new function (){
+    this.laTabla=[];
+    var that=this;
+    this.cargarTabla=function(){
+        $.getJSON("src/laTabla.json")       
+        .done(function( data, textStatus, jqXHR ) {
+            $.each( data, function( key, val ) {
+              that.laTabla[key]=val;
+            });
+        })
+        .fail(function( jqXHR, textStatus, errorThrown ) {
+            alert("Error de carga");
+        });
+    };
+    this.guardarTabla=function(){
+        this.laTabla[0].name="ZZZ";
+        var JsonText=JSON.stringify(this.laTabla);
+        $.ajax
+        ({
+            type: "GET",
+            dataType : 'json',
+            async: true,
+            url: 'src/laTabla.json',
+            data: { data: JsonText },
+            success: function () {alert("Thanks!"); },
+            failure: function() {alert("Error!");}
+        });
+        console.log(JsonText);
+    };
+}
 //Inicio del juego
 var startGame = function() {
+    TableManager.cargarTabla();
     Game.setBoard(0,new Fondo());
-    Game.setBoard(1,new TitleScreen("Tapper", "Presiona espacio para empezar",0,GameManager.maxPuntTapper,playGame,cargaTabla));
+    Game.setBoard(1,new FondoBase());
+    Game.setBoard(2,new StartScreen(GameManager.maxPuntTapper,playGame,cargaTabla));
 };
 //carga la tabla
 var cargaTabla=function(){
-    var tabla=[];
-    $.getJSON("src/laTabla.json")       
-    .done(function( data, textStatus, jqXHR ) {
-            $.each( data, function( key, val ) {
-              tabla[key]=val;
-            });
-            Game.setBoard(0,new Fondo());
-            Game.setBoard(1,new laTabla(tabla,startGame));
-    })
-    .fail(function( jqXHR, textStatus, errorThrown ) {
-            alert("Error de carga");
-            startGame();
-    });
+    //TableManager.guardarTabla();
+    Game.setBoard(0,new Fondo());
+    Game.setBoard(1,new FondoBase());
+    Game.setBoard(2,new laTabla(TableManager.laTabla,startGame));
 };
 //Inicio del partida
 var playGame = function() {
-    Game.setBoard(1,new Fondo());
+    Game.setBoard(0,new Fondo());
     
     //Generacion del board
     var board = new GameBoard();
@@ -190,8 +213,8 @@ var playGame = function() {
     }
     //Generacion del nivel
     board.add(new GenNiveles(niveles[GameManager.nivel],GameManager.estado()));
-    Game.setBoard(2,board);
-    Game.setBoard(3,new GamePoints(GameManager.puntos));
+    Game.setBoard(1,board);
+    Game.setBoard(2,new GamePoints(GameManager.puntos));
 };
 //Partida ganada
 var winGame = function() {
@@ -199,10 +222,10 @@ var winGame = function() {
   if(GameManager.nivel<=GameManager.maxNivel){
       GameManager.nivel++;
       
-      Game.setBoard(3,new TitleScreen("Nivel superado!", "Presiona espacio para iniciar el nivel",GameManager.nivel,0,playGame,cargaTabla));
+      Game.setBoard(3,new TitleScreen("Nivel superado!", "Presiona espacio para iniciar el nivel "+GameManager.nivel,playGame));
       
   }else
-    Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",0,0,playGame,cargaTabla));                           
+    Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",playGame));                           
 };
 //Partida perida
 var loseGame = function() {
@@ -210,7 +233,9 @@ var loseGame = function() {
   GameManager.setMaxPuntTapper();
   GameManager.nivel=1;
   GameManager.puntos=0;
-  Game.setBoard(3,new TitleScreen("Has perdido!", "Presiona espacio para volver a jugar",0,0,playGame,cargaTabla));
+  Game.setBoard(0,new Fondo());
+  Game.setBoard(1,new FondoBase());
+  Game.setBoard(2,new LoseScreen(true,0,0,playGame));
 };
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
@@ -249,7 +274,10 @@ var Fondo=function(){
 };
  Fondo.prototype = new Sprite();
  Fondo.prototype.type = OBJECT_FONDO;
-
+var FondoBase=function(){
+    this.step=function (dt){};
+};
+FondoBase.prototype = new FondoScreen();
 /*---------------------------BLOQUEO IZQUIERDO--------------------------------*/
 var BloqIzq=function(x,y){
     this.setup(x,y);

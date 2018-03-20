@@ -162,19 +162,88 @@ var SpriteSheet = new function() {
 
   return this;
 };
-
-var TitleScreen = function TitleScreen(title,subtitle,nivel,maxPunt,callback,callback2) {
+var StartScreen = function StartScreen(maxPuntos,startGame,tableScreen){
   var up = false;
+  this.step = function(dt) {
+    if(!Game.keys['fire']) up = true;
+    if(up && Game.keys['fire'] && startGame) {
+        Game.keys['fire']=false;
+        startGame();
+    }
+    if(!Game.keys['enter']) up = true;
+    if(up && Game.keys['enter'] && tableScreen) {
+        Game.keys['enter']=false;
+        tableScreen();
+    }
+  };
+  this.draw = function(ctx) {
+    // Foreground
+    ctx.fillStyle = "#FFFFFF";
+    this.title="Tapper";
+    this.puntos="Puntuacion maxima: "+ maxPuntos +" pts";
+    this.subtitle="Pulsa espacio para iniciar";
+    this.subtitle2="Pulsa enter para ver la tabla de puntuaciones";
+    ctx.font = "bold 40px bangers";
+    var measure = ctx.measureText(this.title);  
+    ctx.fillText(this.title,Game.width/2 - measure.width/2,Game.height/2);
+    
+    ctx.font = "bold 20px bangers";
+    var measure4 = ctx.measureText(this.puntos);
+    ctx.fillText(this.puntos,Game.width/2 - measure4.width/2,Game.height/2 + 40);
+    var measure2 = ctx.measureText(this.subtitle);
+    ctx.fillText(this.subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 70);
+    var measure3 = ctx.measureText(this.subtitle2);
+    ctx.fillText(this.subtitle2,Game.width/2 - measure3.width/2,Game.height/2 + 90);      
+  };
+};
+var LoseScreen= function LoseScreen(record,pos,puntos,callback){
+  var up = false;
+  var letras=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
+  var let1=0,let2=0,let3=0;
   this.step = function(dt) {
     if(!Game.keys['fire']) up = true;
     if(up && Game.keys['fire'] && callback) {
         Game.keys['fire']=false;
         callback();
     }
-    if(!Game.keys['enter']) up = true;
-    if(up && Game.keys['enter'] && callback2) {
-        Game.keys['enter']=false;
-        callback2();
+  };
+  this.draw = function(ctx) {
+    // Foreground
+    ctx.fillStyle = "#FFFFFF";
+
+    ctx.font = "bold 40px bangers";
+    var title="Game Over";
+    var measure = ctx.measureText(title);  
+    ctx.fillText(title,Game.width/2 - measure.width/2,Game.height/2);
+    ctx.font = "bold 20px bangers";
+    if(record){
+        var subtitle="Nuevo record!!!";
+        var measure2 = ctx.measureText(subtitle);
+        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
+             
+        var subtitle="Introduce tu nombre:";
+        var measure2 = ctx.measureText(subtitle);
+        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 80);
+        //Aqui van las letras
+        
+        var subtitle="Pulsa espacio para volver a jugar";
+        var measure2 = ctx.measureText(subtitle);
+        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 100);     
+    } else {
+        var subtitle="Pulsa espacio para volver a jugar";
+        
+        var measure2 = ctx.measureText(subtitle);
+        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
+    }
+  };
+}; 
+var TitleScreen = function TitleScreen(title,subtitle,callback) {
+  var up = false;
+  this.step = function(dt) {
+    if(!Game.keys['fire']) up = true;
+    if(up && Game.keys['fire'] && callback) {
+        Game.keys['fire']=false;
+        callback();
     }
   };
 
@@ -188,17 +257,7 @@ var TitleScreen = function TitleScreen(title,subtitle,nivel,maxPunt,callback,cal
     
     ctx.font = "bold 20px bangers";
     var measure2 = ctx.measureText(subtitle);
-    if(nivel!==0)
-        ctx.fillText(subtitle+" "+nivel,Game.width/2 - measure2.width/2,Game.height/2 + 40);
-    else{
-        if(maxPunt!==0){
-            ctx.fillText("Puntuacion maxima "+ maxPunt +" pts",Game.width/2 - measure2.width/2,Game.height/2 + 40);
-            ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 80);
-            ctx.fillText("Pulsa Enter para ver la Tabla",Game.width/2 - measure2.width/2,Game.height/2 + 120);
-        }else
-            ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
-    }
-        
+    ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);      
   };
 };
 
@@ -485,6 +544,13 @@ var GamePoints = function(puntos) {
 
   this.step = function(dt) { };
 };
+var FondoScreen=function(){
+    this.step=function(){};
+    this.draw = function(ctx) {
+    ctx.fillStyle = "rgba(0,0,109,0.7)";
+    ctx.fillRect(0, 0, Game.width, Game.height);
+  };
+};
 var laTabla=function laTabla(tabla,callback){
   var up = false;
   this.tabla=tabla;
@@ -506,6 +572,6 @@ var laTabla=function laTabla(tabla,callback){
     ctx.font = "bold 30px bangers";
     for(var i=0;i<this.tabla.length;i++)
         ctx.fillText(i+1+"\u0029 "+this.tabla[i].name+" "+this.tabla[i].puntos+" pts",Game.width/2 - measure.width/2,60+(30*(i+1)));
-        ctx.fillText("Pulsa espacio para volver",Game.width/2 - measure.width/2,Game.height - 20);
+    ctx.fillText("Pulsa espacio para volver",Game.width/2 - measure.width/2,Game.height - 20);
   };
 };
