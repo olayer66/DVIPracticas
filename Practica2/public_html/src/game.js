@@ -225,10 +225,10 @@ var winGame = function() {
   if(GameManager.nivel<=GameManager.maxNivel){
       GameManager.nivel++;
       
-      Game.setBoard(3,new TitleScreen("Nivel superado!", "Presiona espacio para iniciar el nivel "+GameManager.nivel,playGame));
+      Game.setBoard(2,new TitleScreen("Nivel superado!", "Presiona espacio para iniciar el nivel "+GameManager.nivel,playGame));
       
   }else
-    Game.setBoard(3,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",playGame));                           
+    Game.setBoard(2,new TitleScreen("Has ganado!", "Presiona espacio para volver a jugar",playGame));                           
 };
 //Partida perida
 var loseGame = function() {
@@ -414,9 +414,11 @@ Enemy.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0,
 //Funciones de ejecucion                              
 Enemy.prototype.step = function(dt) {
   this.t += dt;
-
-  if(Math.trunc( this.t*10)%3==0)  this.frame++;
-  if(this.frame==4)  this.frame=0;
+  
+  if(Math.trunc( this.t*10)%12===0)  
+      this.frame++;
+  
+  if(this.frame===4)  this.frame=0;
   this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
   this.vy = 0;
 

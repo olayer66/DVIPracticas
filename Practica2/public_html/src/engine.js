@@ -134,7 +134,7 @@ var Game = new function() {
 
   };
   this.stopBoard= function(){
-    boards[2]=null; 
+    boards[1]=null; 
   };
 };
 
