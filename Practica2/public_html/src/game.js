@@ -2,8 +2,11 @@
 var sprites = {
     Beer: {sx: 512,sy: 99,w: 23,h: 32,frames: 1},
     Glass: {sx: 512,sy: 131,w: 23,h: 32,frames: 1},
-    NPC: {sx: 512,sy: 66,w: 33,h: 33,frames: 1},
-    ParedIzda: {sx: 0,sy: 0,w: 512,h: 480,frames: 1},
+    NPC1: {sx: 199,sy: 18,w: 32,h: 32,frames: 4},
+    NPC2: {sx: 199,sy: 51,w: 32,h: 32,frames: 4},
+    NPC3: {sx: 199,sy: 83,w: 32,h: 32,frames: 4},
+    NPC4: {sx: 199,sy: 115,w: 32,h: 32,frames: 4},
+    ParedIzda: {sx: 0,sy: 0,w: 140,h: 480,frames: 1},
     Player: {sx: 512,sy: 0,w: 56,h: 66,frames: 1},
     TapperGameplay: {sx: 0,sy: 480,w: 512,h: 480,frames: 1}
 };
@@ -14,7 +17,7 @@ var sprites = {
  */
 var entidades = {
   pl: {sprite: 'Player', position:0},//Jugador
-  e1: {sprite: 'NPC', health: 1, A: 100},//Cliente
+  e1: {sprite: 'NPC1', health: 1, A: 100},//Cliente
   j1: {sprite: 'Beer', health: 1, A: 100},//Jarra llena
   j2: {sprite: 'Glass', health: 1, A: 100}//Jarra vacia
 };
@@ -231,7 +234,9 @@ GenNiveles.prototype.step=function(dt){
     this.entra=dt*(this.velAparicion);
     if(this.actuales<this.num){
         if(this.tiempo>this.entra){
+        let n= Math.floor((Math.random() * 4) + 1);
            var enemy = entidades["e1"],ov = {p: p };
+           enemy.sprite='NPC'+n;
            this.board.add(new Enemy(enemy,ov));
            this.tiempo=0;
            this.actuales++;
@@ -239,8 +244,10 @@ GenNiveles.prototype.step=function(dt){
             this.tiempo+=dt;  
     }else if(!GameManager.finNivel){
         GameManager.modEstado(0,"finNivel");
-    }else
+    }/*else
         console.log("fin Spawn");
+        
+        debug?? (borrar)*/
 };
 /*----------------------------FONDO PANTALLA----------------------------------*/
 var Fondo=function(){
@@ -361,6 +368,9 @@ var Enemy = function(blueprint,override) {
   this.y = Game.height-this.positions[override.p].y ;
 
   this.merge(this.baseParameters);
+  //sprite enemigo random
+  //blueprint.sprite=enemies[0];
+
   this.setup(blueprint.sprite,blueprint);
   this.merge(override);
   GameManager.modEstado(1,"cliente");
@@ -377,6 +387,8 @@ Enemy.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0,
 Enemy.prototype.step = function(dt) {
   this.t += dt;
 
+  if(Math.trunc( this.t*10)%3==0)  this.frame++;
+  if(this.frame==4)  this.frame=0;
   this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
   this.vy = 0;
 
