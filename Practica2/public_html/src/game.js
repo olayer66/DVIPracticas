@@ -260,7 +260,7 @@ GenNiveles.prototype.step=function(dt){
     if(this.actuales<this.num){
         if(this.tiempo>this.entra){
         let n= Math.floor((Math.random() * 4) + 1);
-           var enemy = entidades["e1"],ov = {p: p };
+           var enemy = entidades["e1"],ov = {p: p, frame:0 };
            enemy.sprite='NPC'+n;
            this.board.add(new Enemy(enemy,ov));
            this.tiempo=0;
@@ -389,9 +389,8 @@ Beer.prototype.step = function(dt)  {
 
 /*--------------------------------CLIENTE-------------------------------------*/
 var Enemy = function(blueprint,override) {
-  this.positions={0:{x:30,y:112},1:{x:65,y:210},2:{x:95,y:305},3:{x:125,y:400}};
+  this.positions={0:{x:30,y:112},1:{x:65,y:208},2:{x:95,y:303},3:{x:125,y:399}};
   //var p= Math.floor((Math.random() * 4) + 0);
-
   this.x = this.positions[override.p].x ;
   this.y = Game.height-this.positions[override.p].y ;
 
@@ -410,15 +409,17 @@ Enemy.prototype.type = OBJECT_ENEMY;
 Enemy.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0, 
                                    t: 0, 
                                    reloadTime: 0.75, 
-                                   reload: 0 };
+                                   reload: 0,
+                                   frame:0};
 //Funciones de ejecucion                              
 Enemy.prototype.step = function(dt) {
   this.t += dt;
-  
-  if(Math.trunc( this.t*10)%12===0)  
-      this.frame++;
-  
-  if(this.frame===4)  this.frame=0;
+  if(Math.trunc( this.t*10)%8===0){
+    if(this.frame<4)
+        this.frame++;
+    else if(this.frame>0)
+        this.frame--;
+  }
   this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
   this.vy = 0;
 
