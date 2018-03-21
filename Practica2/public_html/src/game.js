@@ -414,8 +414,8 @@ Enemy.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0,
 //Funciones de ejecucion                              
 Enemy.prototype.step = function(dt) {
   this.t += dt;
-  if(Math.trunc( this.t*10)%8===0){
-    if(this.frame<4)
+  if(Math.trunc( this.t*10)%7===0){
+    if(this.frame<3)
         this.frame++;
     else if(this.frame>0)
         this.frame--;
