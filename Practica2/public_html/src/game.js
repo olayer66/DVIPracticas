@@ -6,6 +6,10 @@ var sprites = {
     NPC2: {sx: 199,sy: 51,w: 32,h: 32,frames: 4},
     NPC3: {sx: 199,sy: 83,w: 32,h: 32,frames: 4},
     NPC4: {sx: 199,sy: 115,w: 32,h: 32,frames: 4},
+    NPC1x: {sx: 199,sy: 147,w: 56,h: 42,frames: 3},
+    NPC2x: {sx: 199,sy: 191,w: 56,h: 42,frames: 3},
+    NPC3x: {sx: 199,sy: 233,w: 56,h: 42,frames: 3},
+    NPC4x: {sx: 199,sy: 275,w: 56,h: 42,frames: 3},
     ParedIzda: {sx: 0,sy: 0,w: 140,h: 480,frames: 1},
     Player: {sx: 512,sy: 0,w: 56,h: 66,frames: 1},
     TapperGameplay: {sx: 0,sy: 480,w: 512,h: 480,frames: 1}
