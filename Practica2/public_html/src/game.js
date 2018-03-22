@@ -31,10 +31,16 @@ var entidades = {
  * @returns {datosNivel} 
  */
 var niveles = {//Si se modifica el numero de nieveles cambiar el parametro en el GameManager 
-  1:{nClientes:8,nVidas:4,velCliente:1,velJarra:1,velSpawn:100},
-  2:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:100},
-  3:{nClientes:16,nVidas:4,velCliente:1,velJarra:1,velSpawn:80},
-  4:{nClientes:24,nVidas:3,velCliente:1,velJarra:1,velSpawn:80}
+  1:{nClientes:8,nVidas:4,velCliente:80,velJarra:100,velSpawn:100},
+  2:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:100},
+  3:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:80},
+  4:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80},
+  5:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80},
+  6:{nClientes:14,nVidas:3,velCliente:120,velJarra:100,velSpawn:80},
+  7:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:80},
+  8:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60},
+  9:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60},
+  10:{nClientes:16,nVidas:3,velCliente:140,velJarra:120,velSpawn:60}
   };
 //Variables de control de las colisiones
 var OBJECT_FONDO = 1,
@@ -49,25 +55,20 @@ var OBJECT_FONDO = 1,
 //Gestor del juego
 var GameManager= new function(){
     //Variables de juego
-    this.maxNivel=4;//Numero maximo de niveles
+    this.maxNivel=10;//Numero maximo de niveles
     this.cerveza=0;//jarras de cerveza en pantalla
     this.jarraVacia=0;//jarras vacias en pantalla
     this.cliente=0;//clientes jugados
     this.finNivel=false;//Clientes servidos
-    this.puntos=0//Puntuacion del jugador
+    this.puntos=0;//Puntuacion del jugador
     //Variables de nivel
     this.nivel=1;//Nivel de la partida
     this.maxClientes=0;//Maximo de clientes en el nivel
     this.vidasJugador=1;//Vidas del jugador antes de perder
+    this.velJarra=0;//Velocidad de movimiento de la jarra
     
     this.maxPuntTapper=0;//Variable que contiene la puntuacion maxima del juego
-    //Extraemos la puntuacion maxima del navegador
-    if(localStorage.getItem("maxPuntTapper"))
-        this.maxPuntTapper=localStorage.getItem("maxPuntTapper");
-    else{
-        this.maxPuntTapper=localStorage.setItem("maxPuntTapper",0);
-    }
-    
+        
     /*
      * @description Modifica el estado de la variable pasada
      * @param {number} accion 
@@ -117,6 +118,13 @@ var GameManager= new function(){
         this.nivel=nivel;
     };
     /*
+     * Establece la velocidad base de movimiento de la jarra
+     * @param {number} velJarra
+     */
+    this.setVelJarra=function(velJarra){
+        this.velJarra=velJarra;
+    };
+    /*
      * Comprueba el estado del juego
      */
     this.estado=function(){
@@ -141,12 +149,12 @@ var GameManager= new function(){
         this.puntos=0;
     };
     /*
-     * Comprueba si la puntuacion alcanzada es mayor que la maxima puntuacion obtenida del localStorage
+     * Comprueba si la puntuacion alcanzada es mayor que la maxima puntuacion obtenida del sessionStorage
      * @param {number} maxPunt
      */
     this.setMaxPuntTapper=function(){
         if(this.maxPuntTapper<this.puntos){
-            this.maxPuntTapper=localStorage.setItem("maxPuntTapper",this.puntos);
+            this.maxPuntTapper=sessionStorage.setItem("maxPuntTapper",this.puntos);
             this.maxPuntTapper=this.puntos;
         }
     };
@@ -156,34 +164,47 @@ var TableManager= new function (){
     this.laTabla=[];
     var that=this;
     this.cargarTabla=function(){
-        $.getJSON("src/laTabla.json")       
-        .done(function( data, textStatus, jqXHR ) {
-            $.each( data, function( key, val ) {
-              that.laTabla[key]=val;
+        if(localStorage.getItem("laTabla"))
+            this.laTabla=localStorage.getItem("laTabla");
+        else{
+            $.getJSON("src/laTabla.json")       
+            .done(function( data, textStatus, jqXHR ) {
+                $.each( data, function( key, val ) {
+                  that.laTabla[key]=val;
+                });
+            })
+            .fail(function( jqXHR, textStatus, errorThrown ) {
+                alert("Error de carga");
             });
-        })
-        .fail(function( jqXHR, textStatus, errorThrown ) {
-            alert("Error de carga");
-        });
+            this.guardarTabla();
+        }
     };
     this.guardarTabla=function(){
-        this.laTabla[0].name="ZZZ";
-        var JsonText=JSON.stringify(this.laTabla);
-        $.ajax
-        ({
-            type: "GET",
-            dataType : 'json',
-            async: true,
-            url: 'src/laTabla.json',
-            data: { data: JsonText },
-            success: function () {alert("Thanks!"); },
-            failure: function() {alert("Error!");}
-        });
-        console.log(JsonText);
+        localStorage.setItem("laTabla",this.laTabla);
+    };
+    this.compPuntuacion=function(puntos){
+        if(this.laTabla[9].puntos<puntos){
+            var pos=9;
+            while(pos>=0 && this.laTabla[pos].puntos<puntos)
+                pos--;
+            return pos;
+        }else
+            return -1;
+    };
+    this.insPuntos=function(pos,nombre,puntos){
+        this.laTabla[pos].name=nombre;
+        this.laTabla[pos].puntos=puntos;
+        this.guardarTabla();
     };
 }
 //Inicio del juego
 var startGame = function() {
+    //Extraemos la puntuacion maxima del navegador
+    if(sessionStorage.getItem("maxPuntTapper"))
+        GameManager.maxPuntTapper=sessionStorage.getItem("maxPuntTapper");
+    else
+        sessionStorage.setItem("maxPuntTapper",0);
+    
     TableManager.cargarTabla();
     Game.setBoard(0,new Fondo());
     Game.setBoard(1,new FondoBase());
@@ -248,12 +269,15 @@ var loseGame = function() {
 var GenNiveles=function(config,callback){
     GameManager.resetNivel();
     this.velAparicion= config.velSpawn;//multiplicador de la velocidad de aparacion de los enemigos
+    this.velCliente=config.velCliente;//Velocidad de movimiento del cliente
     this.num=config.nClientes; //maximo clientes
     this.tiempo=0; //contado del tiempo que se lleva
     this.actuales=0; //contador de clientes que se han generado
     this.callback=callback;
+    
     GameManager.setMaxClientes(this.num);
     GameManager.setVidasJugador(config.nVidas);
+    GameManager.setVelJarra(config.velJarra);
     
 };
 GenNiveles.prototype.draw=function(ctx){};
@@ -264,7 +288,7 @@ GenNiveles.prototype.step=function(dt){
     if(this.actuales<this.num){
         if(this.tiempo>this.entra){
         let n= Math.floor((Math.random() * 4) + 1);
-           var enemy = entidades["e1"],ov = {p: p, frame:0 };
+           var enemy = entidades["e1"],ov = {p: p, frame:0,vx:this.velCliente};
            enemy.sprite='NPC'+n;
            this.board.add(new Enemy(enemy,ov));
            this.tiempo=0;
@@ -273,10 +297,7 @@ GenNiveles.prototype.step=function(dt){
             this.tiempo+=dt;  
     }else if(!GameManager.finNivel){
         GameManager.modEstado(0,"finNivel");
-    }/*else
-        console.log("fin Spawn");
-        
-        debug?? (borrar)*/
+    }
 };
 /*----------------------------FONDO PANTALLA----------------------------------*/
 var Fondo=function(){
@@ -345,7 +366,7 @@ Player.prototype.step= function(dt){
       Game.keys['fire'] = false;
       this.reload = this.reloadTime;
       //Creamos una jarra
-      var jarra=entidades["j1"], override={x:this.x,y:this.y};
+      var jarra=entidades["j1"], override={x:this.x,y:this.y,vx:GameManager.velJarra};
       this.board.add(new Beer(jarra,override));
     }
 };
@@ -360,16 +381,13 @@ var Beer = function(blueprint,override) {
 Beer.prototype = new Sprite();
 Beer.prototype.type = OBJECT_PLAYER_PROJECTILE;
 //Parametros base de "JARRA LLENA"
-Beer.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0, 
-                                  t: 0, 
+Beer.prototype.baseParameters = { vx:0,
                                   reloadTime: 0.75, 
                                   reload: 0 };
 
 Beer.prototype.step = function(dt)  {
   this.t += dt;
-
-  this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
-  this.vy = 0;
+  
   this.points=50;
   
   this.x -= this.vx*dt;
@@ -381,7 +399,7 @@ Beer.prototype.step = function(dt)  {
     Game.points += this.points || 50;
     GameManager.puntos += this.points || 50;
     //Creamos una jarra vacia
-    var jarra=entidades["j2"], override={x:this.x,y:this.y};
+    var jarra=entidades["j2"], override={x:this.x,y:this.y,vx:GameManager.velJarra};
     this.board.add(new Glass(jarra,override));
     GameManager.modEstado(-1,"cerveza");
   }else if(collisionBloq) {
@@ -410,11 +428,10 @@ var Enemy = function(blueprint,override) {
 Enemy.prototype = new Sprite();
 Enemy.prototype.type = OBJECT_ENEMY;
 //Parametros base "CLIENTE"
-Enemy.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0, 
-                                   t: 0, 
-                                   reloadTime: 0.75, 
-                                   reload: 0,
-                                   frame:0};
+Enemy.prototype.baseParameters = {vx:0,
+                                  reloadTime: 0.75, 
+                                  reload: 0,
+                                  frame:0};
 //Funciones de ejecucion                              
 Enemy.prototype.step = function(dt) {
   this.t += dt;
@@ -424,9 +441,7 @@ Enemy.prototype.step = function(dt) {
     else if(this.frame>0)
         this.frame--;
   }
-  this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
-  this.vy = 0;
-
+  
   this.x += this.vx*dt;
 
   var collision = this.board.collide(this,OBJECT_BLOQUEO_DER);//Fin de barra
@@ -435,12 +450,6 @@ Enemy.prototype.step = function(dt) {
     GameManager.modEstado(-1,"vidasJugador");
     GameManager.modEstado(-1,"cliente");
   }
-  //neceario??
-  /*if(this.x < -this.w ||
-     this.x > Game.width) {
-       this.board.remove(this);
-       GameManager.modEstado(-1,"cliente");
-  }*/
 };
 Enemy.prototype.hit = function(damage) {
   this.board.remove(this);
@@ -452,25 +461,23 @@ var Glass = function(blueprint,override) {
   this.merge(this.baseParameters);
   this.setup(blueprint.sprite,blueprint);
   this.merge(override);
+  this.vx+=this.vx/10;//Aumentamos la velocidad de la jarra vacia respecto a una llena
   GameManager.modEstado(1,"jarraVacia");
 };
 
 Glass.prototype = new Sprite();
 Glass.prototype.type = OBJECT_ENEMY_PROJECTILE;
 //Parametros base "JARRA VACIA"
-Glass.prototype.baseParameters = { A: 0, B: 0, C: 0, D: 0, 
-                                   t: 0, 
+Glass.prototype.baseParameters = { vx:0,
                                    reloadTime: 0.75, 
                                    reload: 0 };
 //Funciones de ejecucion
 Glass.prototype.step = function(dt)  {
   //Movimiento
   this.t += dt;
-  this.vx = this.A + this.B * Math.sin(this.C * this.t + this.D);
-  this.vy = 0;
+  
   this.x += this.vx*dt;
   this.points=100;
-  
   //Colisiones
   var collision = this.board.collide(this,OBJECT_PLAYER);
   var collisionBlq = this.board.collide(this,OBJECT_BLOQUEO_DER);
@@ -492,5 +499,3 @@ Glass.prototype.step = function(dt)  {
 window.addEventListener("load", function() {
   Game.initialize("game",sprites,startGame);
 });
-
-

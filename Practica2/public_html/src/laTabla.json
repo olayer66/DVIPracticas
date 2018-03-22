@@ -1,12 +1,12 @@
 {
-    "0": {"name":"AAA","puntos":"90000000"},
-    "1": {"name":"BBB","puntos":"80000000"},
-    "2": {"name":"CCC","puntos":"70000000"},
-    "3": {"name":"DDD","puntos":"60000000"},
-    "4": {"name":"EEE","puntos":"50000000"},
-    "5": {"name":"FFF","puntos":"40000000"},
-    "6": {"name":"GGG","puntos":"30000000"},
-    "7": {"name":"HHH","puntos":"20000000"},
-    "8": {"name":"III","puntos":"10000000"},
-    "9": {"name":"JJJ","puntos":"00000000"}               
+    "0": {"name":"AAA","puntos":"00003000"},
+    "1": {"name":"BBB","puntos":"00002000"},
+    "2": {"name":"CCC","puntos":"00001000"},
+    "3": {"name":"DDD","puntos":"00000900"},
+    "4": {"name":"EEE","puntos":"00000800"},
+    "5": {"name":"FFF","puntos":"00000700"},
+    "6": {"name":"GGG","puntos":"00000600"},
+    "7": {"name":"HHH","puntos":"00000500"},
+    "8": {"name":"III","puntos":"00000400"},
+    "9": {"name":"JJJ","puntos":"00000300"}               
 }
