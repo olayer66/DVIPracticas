@@ -1,3 +1,5 @@
+/* global Game */
+
 //Carga de las imagenes(sprites)
 var sprites = {
     Beer: {sx: 512,sy: 99,w: 23,h: 32,frames: 1},
@@ -31,7 +33,7 @@ var entidades = {
  * @returns {datosNivel} 
  */
 var niveles = {//Si se modifica el numero de nieveles cambiar el parametro en el GameManager 
-  1:{nClientes:8,nVidas:4,velCliente:80,velJarra:100,velSpawn:100},
+  1:{nClientes:3,nVidas:4,velCliente:80,velJarra:100,velSpawn:100},
   2:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:100},
   3:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:80},
   4:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80},
@@ -165,27 +167,28 @@ var TableManager= new function (){
     var that=this;
     this.cargarTabla=function(){
         if(localStorage.getItem("laTabla"))
-            this.laTabla=localStorage.getItem("laTabla");
+            //Problema aqui lo carga como un String
+            this.laTabla=JSON.parse(localStorage.getItem("laTabla"));
         else{
             $.getJSON("src/laTabla.json")       
             .done(function( data, textStatus, jqXHR ) {
                 $.each( data, function( key, val ) {
                   that.laTabla[key]=val;
                 });
+                that.guardarTabla();
             })
             .fail(function( jqXHR, textStatus, errorThrown ) {
                 alert("Error de carga");
             });
-            this.guardarTabla();
         }
     };
     this.guardarTabla=function(){
-        localStorage.setItem("laTabla",this.laTabla);
+        localStorage.setItem("laTabla",JSON.stringify(this.laTabla));
     };
     this.compPuntuacion=function(puntos){
         if(this.laTabla[9].puntos<puntos){
             var pos=9;
-            while(pos>=0 && this.laTabla[pos].puntos<puntos)
+            while(pos>=0 && this.laTabla[pos].puntos<=puntos)
                 pos--;
             return pos;
         }else
@@ -196,7 +199,7 @@ var TableManager= new function (){
         this.laTabla[pos].puntos=puntos;
         this.guardarTabla();
     };
-}
+};
 //Inicio del juego
 var startGame = function() {
     //Extraemos la puntuacion maxima del navegador
@@ -205,7 +208,7 @@ var startGame = function() {
     else
         sessionStorage.setItem("maxPuntTapper",0);
     
-    TableManager.cargarTabla();
+    //TableManager.cargarTabla();
     Game.setBoard(0,new Fondo());
     Game.setBoard(1,new FondoBase());
     Game.setBoard(2,new StartScreen(GameManager.maxPuntTapper,playGame,cargaTabla));
@@ -259,11 +262,17 @@ var winGame = function() {
 var loseGame = function() {
   Game.stopBoard();
   GameManager.setMaxPuntTapper();
+  this.record=false;
+  this.pos=TableManager.compPuntuacion(GameManager.puntos);
+  if(this.pos>=0){
+      this.record=true;
+      TableManager.insPuntos(this.pos,"JLS",GameManager.puntos);
+  }
   GameManager.nivel=1;
   GameManager.puntos=0;
   Game.setBoard(0,new Fondo());
   Game.setBoard(1,new FondoBase());
-  Game.setBoard(2,new LoseScreen(true,0,0,playGame));
+  Game.setBoard(2,new LoseScreen(this.record,0,0,startGame));
 };
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
@@ -394,18 +403,20 @@ Beer.prototype.step = function(dt)  {
   var collisionBloq = this.board.collide(this,OBJECT_BLOQUEO_IZQ);//Fin de barra
   var collision = this.board.collide(this,OBJECT_ENEMY);
   if(collision) {
-    collision.hit(this.damage);
     this.board.remove(this);
     Game.points += this.points || 50;
     GameManager.puntos += this.points || 50;
     //Creamos una jarra vacia
     var jarra=entidades["j2"], override={x:this.x,y:this.y,vx:GameManager.velJarra};
     this.board.add(new Glass(jarra,override));
+    GameManager.modEstado(1,"jarraVacia");
     GameManager.modEstado(-1,"cerveza");
+    collision.hit(this.damage);
   }else if(collisionBloq) {
     this.board.remove(this);
-    GameManager.modEstado(-1,"cerveza");
     GameManager.modEstado(-1,"vidasJugador");
+    GameManager.modEstado(-1,"cerveza");
+
   }
 };
 
@@ -462,7 +473,6 @@ var Glass = function(blueprint,override) {
   this.setup(blueprint.sprite,blueprint);
   this.merge(override);
   this.vx+=this.vx/10;//Aumentamos la velocidad de la jarra vacia respecto a una llena
-  GameManager.modEstado(1,"jarraVacia");
 };
 
 Glass.prototype = new Sprite();
@@ -488,14 +498,15 @@ Glass.prototype.step = function(dt)  {
     GameManager.modEstado(-1,"jarraVacia");
   } else if(collisionBlq){
       this.board.remove(this);
-      GameManager.modEstado(-1,"jarraVacia");
       GameManager.modEstado(-1,"vidasJugador");
-      //loseGame();
+      GameManager.modEstado(-1,"jarraVacia");
+      
   }
 };
 
 /*++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++*/
 //Evento de inicio del juego
 window.addEventListener("load", function() {
+  TableManager.cargarTabla();
   Game.initialize("game",sprites,startGame);
 });

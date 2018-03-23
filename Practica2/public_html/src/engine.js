@@ -226,11 +226,11 @@ var LoseScreen= function LoseScreen(record,pos,puntos,callback){
         ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 80);
         //Aqui van las letras
         
-        var subtitle="Pulsa espacio para volver a jugar";
+        var subtitle="Pulsa espacio para volver al menu";
         var measure2 = ctx.measureText(subtitle);
         ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 100);     
     } else {
-        var subtitle="Pulsa espacio para volver a jugar";
+        var subtitle="Pulsa espacio para volver al menu";
         
         var measure2 = ctx.measureText(subtitle);
         ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
@@ -553,6 +553,7 @@ var FondoScreen=function(){
 };
 var laTabla=function laTabla(tabla,callback){
   var up = false;
+  var pointsLength = 8;
   this.tabla=tabla;
   this.step = function(dt) {
     if(!Game.keys['fire']) up = true;
@@ -570,8 +571,12 @@ var laTabla=function laTabla(tabla,callback){
     var measure = ctx.measureText(this.title);  
     ctx.fillText(this.title,Game.width/2 - measure.width/2,40);
     ctx.font = "bold 30px bangers";
-    for(var i=0;i<this.tabla.length;i++)
-        ctx.fillText(i+1+"\u0029 "+this.tabla[i].name+" "+this.tabla[i].puntos+" pts",Game.width/2 - measure.width/2,60+(30*(i+1)));
+    for(var i=0;i<this.tabla.length;i++){
+        var txt = "" + this.tabla[i].puntos;
+        var x = pointsLength - txt.length, zeros = "";
+        while(x-- > 0) { zeros += "0"; }
+        ctx.fillText(i+1+"\u0029 "+this.tabla[i].name+" "+zeros+txt+" pts",Game.width/2 - measure.width/2,60+(30*(i+1)));
+    }
     ctx.fillText("Pulsa espacio para volver",Game.width/2 - measure.width/2,Game.height - 20);
   };
 };
