@@ -379,6 +379,11 @@ Sprite.prototype.setup = function(sprite,props) {
   this.h =  SpriteSheet.map[sprite].h;
 };
 
+Sprite.prototype.change = function() {
+  if(this.sprite[this.sprite.length-1]==='x')this.sprite='NPC'+this.sprite[3];
+  else this.sprite+='x';
+}
+
 Sprite.prototype.merge = function(props) {
   if(props) {
     for (var prop in props) {

@@ -301,7 +301,7 @@ GenNiveles.prototype.step=function(dt){
     if(this.actuales<this.num){
         if(this.tiempo>this.entra){
         let n= Math.floor((Math.random() * 4) + 1);
-           var enemy = entidades["e1"],ov = {p: p, frame:0,vx:this.velCliente};
+           var enemy = entidades["e1"],ov = {p: p, frame:0,vx:this.velCliente, vy:this.velCliente};
            enemy.sprite='NPC'+n;
            this.board.add(new Enemy(enemy,ov));
            this.tiempo=0;
@@ -433,11 +433,13 @@ var Enemy = function(blueprint,override) {
 
   this.merge(this.baseParameters);
   //sprite enemigo random
-  //blueprint.sprite=enemies[0];
 
   this.setup(blueprint.sprite,blueprint);
   this.merge(override);
   GameManager.modEstado(1,"cliente");
+  
+  this.back=false; //steps hacia atras 
+  this.cont=0;
 };
 
 Enemy.prototype = new Sprite();
@@ -452,24 +454,47 @@ Enemy.prototype.baseParameters = {vx:0,
 Enemy.prototype.step = function(dt) {
   this.t += dt;
   if(Math.trunc( this.t*10)%9===0){
-    if(this.frame<3)
+    if(this.back && this.frame<2)
+        this.frame++;
+    else if(!this.back && this.frame<3)
         this.frame++;
     else if(this.frame>0)
         this.frame--;
   }
   
-  this.x += this.vx*dt;
+  if(!this.back) this.x += this.vx*dt;
+  else if (this.cont<150){
+    this.x -= this.vy*dt;
+    this.cont++;
+  } 
+  else{
+    this.cont=0;
+    this.back=false;
+    this.change();
+  } 
 
-  var collision = this.board.collide(this,OBJECT_BLOQUEO_DER);//Fin de barra
-  if(collision) {
+  var collision = this.board.collide(this,OBJECT_BLOQUEO_DER);//Fin de barra 
+  var collisionIZQ = this.board.collide(this,OBJECT_BLOQUEO_IZQ);//Fin de barra izquierda
+  if(collision){
     this.board.remove(this);
     GameManager.modEstado(-1,"vidasJugador");
     GameManager.modEstado(-1,"cliente");
   }
+  else if(this.back && collisionIZQ){
+    this.board.remove(this);
+    GameManager.modEstado(-1,"cliente");
+    Game.points += this.points || 100;
+    GameManager.puntos += this.points || 100;
+  }
 };
+
+
 Enemy.prototype.hit = function(damage) {
-  this.board.remove(this);
-  GameManager.modEstado(-1,"cliente");
+    this.back=true;
+    this.change();
+    this.frame=0;
+  //this.board.remove(this);
+  //GameManager.modEstado(-1,"cliente");
 };
 
 /*--------------------------------JARRA VACIA---------------------------------*/
