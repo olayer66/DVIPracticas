@@ -33,16 +33,16 @@ var entidades = {
  * @returns {datosNivel} 
  */
 var niveles = {//Si se modifica el numero de nieveles cambiar el parametro en el GameManager 
-  1:{nClientes:3,nVidas:4,velCliente:80,velJarra:100,velSpawn:100},
-  2:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:100},
-  3:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:80},
-  4:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80},
-  5:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80},
-  6:{nClientes:14,nVidas:3,velCliente:120,velJarra:100,velSpawn:80},
-  7:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:80},
-  8:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60},
-  9:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60},
-  10:{nClientes:16,nVidas:3,velCliente:140,velJarra:120,velSpawn:60}
+  1:{nClientes:3,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 150},
+  2:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 140},
+  3:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:80, distBack: 130},
+  4:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 120},
+  5:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 100},
+  6:{nClientes:14,nVidas:3,velCliente:120,velJarra:100,velSpawn:80, distBack: 90},
+  7:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:80, distBack: 70},
+  8:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60, distBack: 60},
+  9:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60, distBack: 40},
+  10:{nClientes:16,nVidas:3,velCliente:140,velJarra:120,velSpawn:60, distBack: 25}
   };
 //Variables de control de las colisiones
 var OBJECT_FONDO = 1,
@@ -287,6 +287,7 @@ var GenNiveles=function(config,callback){
     this.tiempo=0; //contado del tiempo que se lleva
     this.actuales=0; //contador de clientes que se han generado
     this.callback=callback;
+    this.distBack=config.distBack;
     
     GameManager.setMaxClientes(this.num);
     GameManager.setVidasJugador(config.nVidas);
@@ -301,7 +302,7 @@ GenNiveles.prototype.step=function(dt){
     if(this.actuales<this.num){
         if(this.tiempo>this.entra){
         let n= Math.floor((Math.random() * 4) + 1);
-           var enemy = entidades["e1"],ov = {p: p, frame:0,vx:this.velCliente, vy:this.velCliente};
+           var enemy = entidades["e1"],ov = {p: p, frame:0,vx:this.velCliente, vy:this.velCliente, dBack: this.distBack };
            enemy.sprite='NPC'+n;
            this.board.add(new Enemy(enemy,ov));
            this.tiempo=0;
@@ -463,7 +464,7 @@ Enemy.prototype.step = function(dt) {
   }
   
   if(!this.back) this.x += this.vx*dt;
-  else if (this.cont<150){
+  else if (this.cont<this.dBack){
     this.x -= this.vy*dt;
     this.cont++;
   } 
