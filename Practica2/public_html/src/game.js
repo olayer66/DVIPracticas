@@ -188,9 +188,13 @@ var TableManager= new function (){
     this.compPuntuacion=function(puntos){
         if(this.laTabla[9].puntos<puntos){
             var pos=9;
-            while(pos>=0 && this.laTabla[pos].puntos<=puntos)
-                pos--;
-            return pos;
+            if(this.laTabla[0].puntos<=puntos)
+                return 0;
+            else{
+                while(pos>0 && this.laTabla[pos].puntos<=puntos)
+                    pos--;     
+                return pos+=1;
+            }
         }else
             return -1;
     };
@@ -440,13 +444,14 @@ Enemy.prototype = new Sprite();
 Enemy.prototype.type = OBJECT_ENEMY;
 //Parametros base "CLIENTE"
 Enemy.prototype.baseParameters = {vx:0,
+                                  t: 0, 
                                   reloadTime: 0.75, 
                                   reload: 0,
                                   frame:0};
 //Funciones de ejecucion                              
 Enemy.prototype.step = function(dt) {
   this.t += dt;
-  if(Math.trunc( this.t*10)%7===0){
+  if(Math.trunc( this.t*10)%9===0){
     if(this.frame<3)
         this.frame++;
     else if(this.frame>0)
