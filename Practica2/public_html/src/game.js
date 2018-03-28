@@ -63,6 +63,8 @@ var GameManager= new function(){
     this.cliente=0;//clientes jugados
     this.finNivel=false;//Clientes servidos
     this.puntos=0;//Puntuacion del jugador
+    this.finPartida=false;//Marca el fin de partida por vidas
+    
     //Variables de nivel
     this.nivel=1;//Nivel de la partida
     this.maxClientes=0;//Maximo de clientes en el nivel
@@ -132,8 +134,10 @@ var GameManager= new function(){
     this.estado=function(){
         if(this.jarraVacia===0 && this.cliente===0 && this.finNivel)
             winGame();
-        if(this.vidasJugador===0)
+        if(this.vidasJugador===0 && !this.finPartida){
+            this.finPartida=true;
             loseGame();
+        }
     };
     /*
      * Resetea las variables de juego cuando se inicia un nuevo nivel
@@ -142,6 +146,7 @@ var GameManager= new function(){
         this.cerveza=0;
         this.cliente=0;
         this.finNivel=false;
+        this.finPartida=false;
         this.jarraVacia=0;
     };
     /*
@@ -266,17 +271,19 @@ var winGame = function() {
 var loseGame = function() {
   Game.stopBoard();
   GameManager.setMaxPuntTapper();
-  this.record=false;
-  this.pos=TableManager.compPuntuacion(GameManager.puntos);
-  if(this.pos>=0){
-      this.record=true;
-      TableManager.insPuntos(this.pos,"JLS",GameManager.puntos);
-  }
-  GameManager.nivel=1;
-  GameManager.puntos=0;
   Game.setBoard(0,new Fondo());
   Game.setBoard(1,new FondoBase());
-  Game.setBoard(2,new LoseScreen(this.record,0,0,startGame));
+  this.punt=GameManager.puntos;
+  this.pos=TableManager.compPuntuacion(this.punt);
+  if(this.pos>=0){
+      Game.setBoard(2,new RecordScreen(function(nom){
+          TableManager.insPuntos(this.pos,nom,this.punt);
+          startGame();
+      }));    
+  }else
+      Game.setBoard(2,new TitleScreen("Game Over", "Presiona espacio para volver a jugar",startGame));
+  GameManager.nivel=1;
+  GameManager.puntos=0;
 };
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
@@ -351,7 +358,7 @@ var ParedCol=function(){
 /*-----------------------------------JUGADOR----------------------------------*/
 var Player = function(blueprint,override) { 
   this.positions={0:{x:90,y:100},1:{x:122,y:197},2:{x:153,y:292},3:{x:185,y:388}};
-  this.reloadTime = 0.5; // un cuarto de segundo
+  this.reloadTime = 0.25; // un cuarto de segundo
   this.reload = this.reloadTime;
   this.merge(this.baseParameters);
   this.setup(blueprint.sprite,blueprint);
@@ -396,7 +403,7 @@ Beer.prototype = new Sprite();
 Beer.prototype.type = OBJECT_PLAYER_PROJECTILE;
 //Parametros base de "JARRA LLENA"
 Beer.prototype.baseParameters = { vx:0,
-                                  reloadTime: 0.75, 
+                                  reloadTime: 0.50, 
                                   reload: 0 };
 
 Beer.prototype.step = function(dt)  {

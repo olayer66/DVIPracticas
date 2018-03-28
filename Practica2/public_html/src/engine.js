@@ -52,7 +52,7 @@ var Game = new function() {
   
 
   // Handle Input
-  var KEY_CODES = { 38:'up', 40:'down', 32 :'fire',13:'enter'};
+  var KEY_CODES = { 38:'up', 40:'down', 39:'right', 37:'left', 32 :'fire',13:'enter'};
   this.keys = {};
 
   this.setupInput = function() {
@@ -185,26 +185,75 @@ var StartScreen = function StartScreen(maxPuntos,startGame,tableScreen){
     this.subtitle2="Pulsa enter para ver la tabla de puntuaciones";
     ctx.font = "bold 40px bangers";
     var measure = ctx.measureText(this.title);  
-    ctx.fillText(this.title,Game.width/2 - measure.width/2,Game.height/2);
+    ctx.fillText(this.title,Game.width/2 - measure.width/2,Game.height/3);
     
     ctx.font = "bold 20px bangers";
     var measure4 = ctx.measureText(this.puntos);
-    ctx.fillText(this.puntos,Game.width/2 - measure4.width/2,Game.height/2 + 40);
+    ctx.fillText(this.puntos,Game.width/2 - measure4.width/2,Game.height/3 + 40);
     var measure2 = ctx.measureText(this.subtitle);
-    ctx.fillText(this.subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 70);
+    ctx.fillText(this.subtitle,Game.width/2 - measure2.width/2,Game.height/3 + 70);
     var measure3 = ctx.measureText(this.subtitle2);
-    ctx.fillText(this.subtitle2,Game.width/2 - measure3.width/2,Game.height/2 + 90);      
+    ctx.fillText(this.subtitle2,Game.width/2 - measure3.width/2,Game.height/3 + 90);      
   };
 };
-var LoseScreen= function LoseScreen(record,pos,puntos,callback){
+var RecordScreen= function LoseScreen(callback){
   var up = false;
+  var name="ZZZ";
   var letras=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
   var let1=0,let2=0,let3=0;
+  var pos=0;
   this.step = function(dt) {
     if(!Game.keys['fire']) up = true;
     if(up && Game.keys['fire'] && callback) {
         Game.keys['fire']=false;
-        callback();
+        name=letras[let1]+letras[let2]+letras[let3];
+        callback(name);
+    }
+    //Seleccion de la letra
+    if(Game.keys['up']){
+        switch (pos){
+            case 0:
+                if(let1<letras.length-1)
+                    let1++;
+                break;
+            case 1:
+                if(let2<letras.length-1)
+                    let2++;
+                break;
+            case 2:
+                if(let3<letras.length-1)
+                    let3++;
+                break;
+            default:
+                console.log("Posicion no valida"); 
+        }
+        Game.keys['up'] = false;
+    }else if(Game.keys['down']){
+        switch (pos){
+            case 0:
+                if(let1>0)
+                    let1--;
+                break;
+            case 1:
+                if(let2>0)
+                    let2--;
+                break;
+            case 2:
+                if(let3>0)
+                    let3--;
+                break;
+            default:
+                console.log("Posicion no valida");              
+        }
+        Game.keys['down'] = false;
+    }
+    //Movimiento de la seleccion de letra
+    if(Game.keys['left'] && pos>0){
+        pos--;
+        Game.keys['left'] = false;
+    }else if(Game.keys['right']&& pos<3){
+        pos++;
+        Game.keys['right'] = false;
     }
   };
   this.draw = function(ctx) {
@@ -214,27 +263,25 @@ var LoseScreen= function LoseScreen(record,pos,puntos,callback){
     ctx.font = "bold 40px bangers";
     var title="Game Over";
     var measure = ctx.measureText(title);  
-    ctx.fillText(title,Game.width/2 - measure.width/2,Game.height/2);
+    ctx.fillText(title,Game.width/2 - measure.width/2,50);
     ctx.font = "bold 20px bangers";
-    if(record){
-        var subtitle="Nuevo record!!!";
-        var measure2 = ctx.measureText(subtitle);
-        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
-             
-        var subtitle="Introduce tu nombre:";
-        var measure2 = ctx.measureText(subtitle);
-        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 80);
-        //Aqui van las letras
-        
-        var subtitle="Pulsa espacio para volver al menu";
-        var measure2 = ctx.measureText(subtitle);
-        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 100);     
-    } else {
-        var subtitle="Pulsa espacio para volver al menu";
-        
-        var measure2 = ctx.measureText(subtitle);
-        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
-    }
+    var subtitle="Nuevo record!!!";
+    var measure2 = ctx.measureText(subtitle);
+    ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/4 + 40);
+    //Introdue el nombre
+    var subtitle="Introduce tu nombre:";
+    var measure2 = ctx.measureText(subtitle);
+    ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/4 + 80);
+    //Aqui van las letras
+    ctx.font = "bold 40px bangers";
+    var ltr=letras[let1]+"  "+letras[let2]+"  "+letras[let3];
+    var measure3 = ctx.measureText(ltr);
+    ctx.fillText(ltr,Game.width/2 - measure3.width/2,Game.height/4 + 130);
+    //Volver menu
+    ctx.font = "bold 20px bangers";
+    var subtitle="Pulsa espacio para volver al menu";
+    var measure4 = ctx.measureText(subtitle);
+    ctx.fillText(subtitle,Game.width/2 - measure4.width/2,Game.height- 50);     
   };
 }; 
 var TitleScreen = function TitleScreen(title,subtitle,callback) {
