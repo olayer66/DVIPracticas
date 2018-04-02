@@ -25,24 +25,25 @@ var entidades = {
   pl: {sprite: 'Player', position:0},//Jugador
   e1: {sprite: 'NPC1', health: 1, A: 100},//Cliente
   j1: {sprite: 'Beer', health: 1, A: 100},//Jarra llena
-  j2: {sprite: 'Glass', health: 1, A: 100}//Jarra vacia
+  j2: {sprite: 'Glass', health: 1, A: 100},//Jarra vacia
+  tip: {sprite: 'Tip', health: 1, A: 100}//Propina
 };
 /*
  * Array que contiene la informacion para los niveles
- * @example nivel:{numEnemigos,vidasJugador,vel. cliente,vel. jarra, vel. spawn(en ms)} 
+ * @example nivel:{numEnemigos,vidasJugador,vel. cliente,vel. jarra, vel. spawn(en ms),Dist. retroceso cliente, probabilidad propina} 
  * @returns {datosNivel} 
  */
 var niveles = {//Si se modifica el numero de nieveles cambiar el parametro en el GameManager 
-  1:{nClientes:3,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 150},
-  2:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 140},
-  3:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:80, distBack: 130},
-  4:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 120},
-  5:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 100},
-  6:{nClientes:14,nVidas:3,velCliente:120,velJarra:100,velSpawn:80, distBack: 90},
-  7:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:80, distBack: 70},
-  8:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60, distBack: 60},
-  9:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60, distBack: 40},
-  10:{nClientes:16,nVidas:3,velCliente:140,velJarra:120,velSpawn:60, distBack: 25}
+  1:{nClientes:3,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 150,tipProb:0.5},
+  2:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 140,tipProb:0.5},
+  3:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:80, distBack: 130,tipProb:0.5},
+  4:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 120,tipProb:0.6},
+  5:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 100,tipProb:0.6},
+  6:{nClientes:14,nVidas:3,velCliente:120,velJarra:100,velSpawn:80, distBack: 90,tipProb:0.8},
+  7:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:80, distBack: 70,tipProb:0.8},
+  8:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60, distBack: 60,tipProb:1},
+  9:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60, distBack: 40,tipProb:1},
+  10:{nClientes:16,nVidas:3,velCliente:140,velJarra:120,velSpawn:60, distBack: 25,tipProb:1.2}
   };
 //Variables de control de las colisiones
 var OBJECT_FONDO = 1,
@@ -52,7 +53,8 @@ var OBJECT_FONDO = 1,
     OBJECT_PLAYER = 16,
     OBJECT_PLAYER_PROJECTILE = 32,
     OBJECT_ENEMY = 64,
-    OBJECT_ENEMY_PROJECTILE = 128;
+    OBJECT_ENEMY_PROJECTILE = 128,
+    OBJECT_TIP = 256;
     
 //Gestor del juego
 var GameManager= new function(){
@@ -64,12 +66,14 @@ var GameManager= new function(){
     this.finNivel=false;//Clientes servidos
     this.puntos=0;//Puntuacion del jugador
     this.finPartida=false;//Marca el fin de partida por vidas
+    this.tPropina=0//Valor a sumar a la probabilidad de conseguir propina calculado respecto al tiempo sin recibir una
     
     //Variables de nivel
     this.nivel=1;//Nivel de la partida
     this.maxClientes=0;//Maximo de clientes en el nivel
     this.vidasJugador=1;//Vidas del jugador antes de perder
     this.velJarra=0;//Velocidad de movimiento de la jarra
+    this.probPropina=1//Probabilidad de aparacion de una propina
     
     this.maxPuntTapper=0;//Variable que contiene la puntuacion maxima del juego
         
@@ -129,6 +133,13 @@ var GameManager= new function(){
         this.velJarra=velJarra;
     };
     /*
+     * Establece la probabilidad de recibir una propina en funcion de la dificultad
+     * @param {float} probPropina
+     */
+    this.setProbPropina=function(probPropina){
+        this.probPropina=probPropina;
+    };
+    /*
      * Comprueba el estado del juego
      */
     this.estado=function(){
@@ -140,6 +151,21 @@ var GameManager= new function(){
         }
     };
     /*
+     * Calcula si el cliente suelta una propina o no
+     * @returns {boolean}
+     */
+    this.genTip=function(){
+        //Generamos un resultado combinacion de un aleatorio(0 a 0.9) * la probabilidad de recibir una + tiempo sin recibir una propina
+        var resultado=(parseFloat(Math.random().toFixed(1))*this.probPropina)+this.tPropina;
+        if(resultado<1){
+            this.tPropina+=0.05;
+            return false;
+        } else {
+            this.tPropina=0;
+            return true;
+        }
+    };
+    /*
      * Resetea las variables de juego cuando se inicia un nuevo nivel
      */
     this.resetNivel=function(){
@@ -148,6 +174,7 @@ var GameManager= new function(){
         this.finNivel=false;
         this.finPartida=false;
         this.jarraVacia=0;
+        this.tPropina=0;
     };
     /*
      * @description Reinicia la puntuacion del jugador
@@ -236,7 +263,7 @@ var playGame = function() {
     //Generacion del board
     var board = new GameBoard();
     //Insertamos el jugador
-    var jugador=entidades["pl"],override={};
+    var jugador=entidades["pl"],override={vx:800};
     board.add(new Player(jugador,override));
 
     board.add(new ParedCol());
@@ -299,6 +326,7 @@ var GenNiveles=function(config,callback){
     GameManager.setMaxClientes(this.num);
     GameManager.setVidasJugador(config.nVidas);
     GameManager.setVelJarra(config.velJarra);
+    GameManager.setProbPropina(config.tipProb);
     
 };
 GenNiveles.prototype.draw=function(ctx){};
@@ -358,6 +386,7 @@ var ParedCol=function(){
 /*-----------------------------------JUGADOR----------------------------------*/
 var Player = function(blueprint,override) { 
   this.positions={0:{x:90,y:100},1:{x:122,y:197},2:{x:153,y:292},3:{x:185,y:388}};
+  this.maxMovEnX=[30,65,95,125];
   this.reloadTime = 0.25; // un cuarto de segundo
   this.reload = this.reloadTime;
   this.merge(this.baseParameters);
@@ -367,7 +396,9 @@ var Player = function(blueprint,override) {
   this.y = Game.height-this.positions[this.position].y ;
 };
 //Parametros base de "JUGADOR"
-Player.prototype.baseParameters = { position:0};
+Player.prototype.baseParameters = { position:0,
+                                    vx:0
+                                  };
 
 Player.prototype = new Sprite();
 Player.prototype.type = OBJECT_PLAYER;
@@ -375,12 +406,22 @@ Player.prototype.step= function(dt){
     this.reload-=dt;
     if(Game.keys['up'] && this.position<3){
         this.position++;
+        this.x = Game.width -  this.positions[this.position].x ;
         Game.keys['up'] = false;
     }else if(Game.keys['down'] && this.position>0){
         this.position--;
+        this.x = Game.width -  this.positions[this.position].x ;
         Game.keys['down'] = false;
     }
-    this.x = Game.width -  this.positions[this.position].x ;
+    if(Game.keys['left']){
+        if((this.x-this.vx*dt)>this.maxMovEnX[this.position])
+            this.x-=this.vx*dt;
+        Game.keys['left'] = false;
+    }else if(Game.keys['right']){
+        if((this.x+this.vx*dt)<(Game.width -  this.positions[this.position].x))
+            this.x+=this.vx*dt;
+        Game.keys['right'] = false;
+    }   
     this.y = Game.height-this.positions[this.position].y ;
 
     if(Game.keys['fire'] && this.reload < 0) {
@@ -482,6 +523,7 @@ Enemy.prototype.step = function(dt) {
   } 
 
   var collision = this.board.collide(this,OBJECT_BLOQUEO_DER);//Fin de barra 
+  var collisionJug = this.board.collide(this,OBJECT_PLAYER);//Jugador
   var collisionIZQ = this.board.collide(this,OBJECT_BLOQUEO_IZQ);//Fin de barra izquierda
   if(collision){
     this.board.remove(this);
@@ -493,6 +535,10 @@ Enemy.prototype.step = function(dt) {
     GameManager.modEstado(-1,"cliente");
     Game.points += this.points || 100;
     GameManager.puntos += this.points || 100;
+  }else if(collisionJug){//Colisiona contra el jugador
+    this.board.remove(this);
+    GameManager.modEstado(-1,"vidasJugador");
+    GameManager.modEstado(-1,"cliente");
   }
 };
 
@@ -501,10 +547,38 @@ Enemy.prototype.hit = function(damage) {
     this.back=true;
     this.change();
     this.frame=0;
+    //Generador de propinas
+    /*if(GameManager.genTip()){
+        var tip=entidades["tip"], override={eraseTime:5000};
+        this.board.add(new Beer(tip,override));
+    }*/
   //this.board.remove(this);
   //GameManager.modEstado(-1,"cliente");
 };
+/*----------------------------------PROPINA-----------------------------------*/
+var Tip=function(blueprint,override){
+  this.merge(this.baseParameters);
+  this.setup(blueprint.sprite,blueprint);
+  this.merge(override);
+};
+Tip.prototype = new Sprite();
+Tip.prototype.type = OBJECT_TIP;
+Tip.prototype.baseParameters = { eraseTime:0};
 
+Tip.prototype.step=function(dt){
+    var borrar=0;
+    var collision = this.board.collide(this,OBJECT_PLAYER);//El jugador la recoge
+    this.points=1000;
+    if(collision){
+        Game.points += this.points || 50;
+        GameManager.puntos += this.points || 50;
+        this.board.remove(this);
+    }else{
+        borrar+=dt;
+        if(borrar>=this.eraseTime)
+            this.board.remove(this);
+    }
+};
 /*--------------------------------JARRA VACIA---------------------------------*/
 var Glass = function(blueprint,override) {
   this.merge(this.baseParameters);
