@@ -26,7 +26,7 @@ var entidades = {
   e1: {sprite: 'NPC1', health: 1, A: 100},//Cliente
   j1: {sprite: 'Beer', health: 1, A: 100},//Jarra llena
   j2: {sprite: 'Glass', health: 1, A: 100},//Jarra vacia
-  tip: {sprite: 'Tip', health: 1, A: 100}//Propina
+  tip: {sprite: 'Beer', health: 1, A: 100}//Propina (Cambiar cuando este implementado)
 };
 /*
  * Array que contiene la informacion para los niveles
@@ -34,7 +34,7 @@ var entidades = {
  * @returns {datosNivel} 
  */
 var niveles = {//Si se modifica el numero de nieveles cambiar el parametro en el GameManager 
-  1:{nClientes:3,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 150,tipProb:0.5},
+  1:{nClientes:3,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 150,tipProb:10},
   2:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 140,tipProb:0.5},
   3:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:80, distBack: 130,tipProb:0.5},
   4:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 120,tipProb:0.6},
@@ -66,14 +66,14 @@ var GameManager= new function(){
     this.finNivel=false;//Clientes servidos
     this.puntos=0;//Puntuacion del jugador
     this.finPartida=false;//Marca el fin de partida por vidas
-    this.tPropina=0//Valor a sumar a la probabilidad de conseguir propina calculado respecto al tiempo sin recibir una
+    this.tPropina=0;//Valor a sumar a la probabilidad de conseguir propina calculado respecto al tiempo sin recibir una
     
     //Variables de nivel
     this.nivel=1;//Nivel de la partida
     this.maxClientes=0;//Maximo de clientes en el nivel
     this.vidasJugador=1;//Vidas del jugador antes de perder
     this.velJarra=0;//Velocidad de movimiento de la jarra
-    this.probPropina=1//Probabilidad de aparacion de una propina
+    this.probPropina=1;//Probabilidad de aparacion de una propina
     
     this.maxPuntTapper=0;//Variable que contiene la puntuacion maxima del juego
         
@@ -548,10 +548,10 @@ Enemy.prototype.hit = function(damage) {
     this.change();
     this.frame=0;
     //Generador de propinas
-    /*if(GameManager.genTip()){
-        var tip=entidades["tip"], override={eraseTime:5000};
-        this.board.add(new Beer(tip,override));
-    }*/
+    if(GameManager.genTip()){
+        var tip=entidades["tip"], override={x:this.x,y:this.y+10,eraseTime:3000};
+        this.board.add(new Tip(tip,override));
+    }
   //this.board.remove(this);
   //GameManager.modEstado(-1,"cliente");
 };
@@ -563,10 +563,9 @@ var Tip=function(blueprint,override){
 };
 Tip.prototype = new Sprite();
 Tip.prototype.type = OBJECT_TIP;
-Tip.prototype.baseParameters = { eraseTime:0};
+Tip.prototype.baseParameters = { eraseTime:0,borrar:0};
 
 Tip.prototype.step=function(dt){
-    var borrar=0;
     var collision = this.board.collide(this,OBJECT_PLAYER);//El jugador la recoge
     this.points=1000;
     if(collision){
@@ -574,8 +573,8 @@ Tip.prototype.step=function(dt){
         GameManager.puntos += this.points || 50;
         this.board.remove(this);
     }else{
-        borrar+=dt;
-        if(borrar>=this.eraseTime)
+        this.borrar+=dt*1000;
+        if(this.borrar>=this.eraseTime)
             this.board.remove(this);
     }
 };
