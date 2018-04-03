@@ -272,11 +272,19 @@ var RecordScreen= function LoseScreen(callback){
     var subtitle="Introduce tu nombre:";
     var measure2 = ctx.measureText(subtitle);
     ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/4 + 80);
+    
     //Aqui van las letras
     ctx.font = "bold 40px bangers";
     var ltr=letras[let1]+"  "+letras[let2]+"  "+letras[let3];
     var measure3 = ctx.measureText(ltr);
-    ctx.fillText(ltr,Game.width/2 - measure3.width/2,Game.height/4 + 130);
+    ctx.fillText(ltr,Game.width/2 - measure3.width/2,Game.height/4 + 135);
+    
+    //fechas de la letra activa
+    ctx.font = "bold 20px bangers";
+    var posX=[Game.width/2 - measure3.width/2 +1 ,Game.width/2 - measure3.width/2+35,Game.width/2 - measure3.width/2+70];
+    ctx.fillText("\u25B2", posX[pos], Game.height/4 + 100);
+    ctx.fillText("\u25BC", posX[pos],Game.height/4 + 155);
+
     //Volver menu
     ctx.font = "bold 20px bangers";
     var subtitle="Pulsa espacio para volver al menu";
@@ -326,7 +334,7 @@ var GameBoard = function() {
   // Mark an object for removal
   this.remove = function(obj) { 
     var idx = this.removed.indexOf(obj);
-    if(idx == -1) {
+    if(idx === -1) {
       this.removed.push(obj); 
       return true;
     } else {
@@ -341,7 +349,7 @@ var GameBoard = function() {
   this.finalizeRemoved = function() {
     for(var i=0,len=this.removed.length;i<len;i++) {
       var idx = this.objects.indexOf(this.removed[i]);
-      if(idx != -1) {
+      if(idx !== -1) {
         this.cnt[this.removed[i].type]--;
         this.objects.splice(idx,1);
       }
@@ -389,7 +397,7 @@ var GameBoard = function() {
   // match against an optional type
   this.collide = function(obj,type) {
     return this.detect(function() {
-      if(obj != this) {
+      if(obj !== this) {
        var col = (!type || this.type & type) && board.overlap(obj,this);
        return col ? this : false;
       }
@@ -429,7 +437,7 @@ Sprite.prototype.setup = function(sprite,props) {
 Sprite.prototype.change = function() {
   if(this.sprite[this.sprite.length-1]==='x')this.sprite='NPC'+this.sprite[3];
   else this.sprite+='x';
-}
+};
 
 Sprite.prototype.merge = function(props) {
   if(props) {
@@ -446,60 +454,6 @@ Sprite.prototype.draw = function(ctx) {
 Sprite.prototype.hit = function(damage) {
   this.board.remove(this);
 };
-
-
-var Level = function(levelData,callback) {
-  this.levelData = [];
-  for(var i =0; i<levelData.length; i++) {
-    this.levelData.push(Object.create(levelData[i]));
-  }
-  this.t = 0;
-  this.callback = callback;
-};
-
-Level.prototype.step = function(dt) {
-  var idx = 0, remove = [], curShip = null;
-
-  // Update the current time offset
-  this.t += dt * 1000;
-
-  //   Start, End,  Gap, Type,   Override
-  // [ 0,     4000, 500, 'step', { x: 100 } ]
-  while((curShip = this.levelData[idx]) && 
-        (curShip[0] < this.t + 2000)) {
-    // Check if we've passed the end time 
-    if(this.t > curShip[1]) {
-      remove.push(curShip);
-    } else if(curShip[0] < this.t) {
-      // Get the enemy definition blueprint
-      var enemy = enemies[curShip[3]],
-          override = curShip[4];
-
-      // Add a new enemy with the blueprint and override
-      this.board.add(new Enemy(enemy,override));
-
-      // Increment the start time by the gap
-      curShip[0] += curShip[2];
-    }
-    idx++;
-  }
-
-  // Remove any objects from the levelData that have passed
-  for(var i=0,len=remove.length;i<len;i++) {
-    var remIdx = this.levelData.indexOf(remove[i]);
-    if(remIdx != -1) this.levelData.splice(remIdx,1);
-  }
-
-  // If there are no more enemies on the board or in 
-  // levelData, this level is done
-  if(this.levelData.length === 0 && this.board.cnt[OBJECT_ENEMY] === 0) {
-    if(this.callback) this.callback();
-  }
-
-};
-
-Level.prototype.draw = function(ctx) { };
-
 
 var TouchControls = function() {
 
@@ -553,12 +507,12 @@ var TouchControls = function() {
       } 
     }
 
-    if(e.type == 'touchstart' || e.type == 'touchend') {
+    if(e.type === 'touchstart' || e.type === 'touchend') {
       for(i=0;i<e.changedTouches.length;i++) {
         touch = e.changedTouches[i];
         x = touch.pageX / Game.canvasMultiplier - Game.canvas.offsetLeft;
         if(x > 4 * unitWidth) {
-          Game.keys['fire'] = (e.type == 'touchstart');
+          Game.keys['fire'] = (e.type === 'touchstart');
         }
       }
     }
@@ -596,6 +550,7 @@ var GamePoints = function(puntos) {
 
   this.step = function(dt) { };
 };
+
 var FondoScreen=function(){
     this.step=function(){};
     this.draw = function(ctx) {
@@ -603,7 +558,7 @@ var FondoScreen=function(){
     ctx.fillRect(0, 0, Game.width, Game.height);
   };
 };
-var laTabla=function laTabla(tabla,callback){
+var laTabla=function (tabla,callback){
   var up = false;
   var pointsLength = 8;
   this.tabla=tabla;

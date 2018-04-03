@@ -26,7 +26,8 @@ var entidades = {
   e1: {sprite: 'NPC1', health: 1, A: 100},//Cliente
   j1: {sprite: 'Beer', health: 1, A: 100},//Jarra llena
   j2: {sprite: 'Glass', health: 1, A: 100},//Jarra vacia
-  tip: {sprite: 'Beer', health: 1, A: 100}//Propina (Cambiar cuando este implementado)
+  tip: {sprite: 'Beer', health: 1, A: 100},//Propina (Cambiar cuando este implementado)
+  vida:{sprite: 'Beer', health: 1, A: 100}//Barra de vidas (Cambiar cuando este implementado)
 };
 /*
  * Array que contiene la informacion para los niveles
@@ -34,7 +35,7 @@ var entidades = {
  * @returns {datosNivel} 
  */
 var niveles = {//Si se modifica el numero de nieveles cambiar el parametro en el GameManager 
-  1:{nClientes:3,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 150,tipProb:10},
+  1:{nClientes:8,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 150,tipProb:0.5},
   2:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 140,tipProb:0.5},
   3:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:80, distBack: 130,tipProb:0.5},
   4:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 120,tipProb:0.6},
@@ -312,6 +313,25 @@ var loseGame = function() {
   GameManager.nivel=1;
   GameManager.puntos=0;
 };
+/*-----------------------------BARRA DE VIDAS---------------------------------*/
+var GenVidas=function(){
+    this.SpriteVidas={};
+    /*
+     * Genera el numeros de vidas dependiendo del valor en el GameManager
+     */
+    this.generarVidas=function(){
+        
+    };
+};
+GenVidas.prototype.draw=function(ctx){};
+GenVidas.prototype.step=function(dt){
+    
+};
+var Vida=function(){
+    
+};
+Vida.prototype = new Sprite();
+
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
     GameManager.resetNivel();
