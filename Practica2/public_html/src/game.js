@@ -12,6 +12,8 @@ var sprites = {
     NPC2x: {sx: 199,sy: 191,w: 56,h: 42,frames: 3},
     NPC3x: {sx: 199,sy: 233,w: 56,h: 42,frames: 3},
     NPC4x: {sx: 199,sy: 275,w: 56,h: 42,frames: 3},
+    Life: {sx: 512,sy: 172,w: 18,h: 18,frames: 1},
+    Tip: {sx: 199,sy: 320,w: 27,h: 27,frames: 10},
     ParedIzda: {sx: 0,sy: 0,w: 140,h: 480,frames: 1},
     Player: {sx: 512,sy: 0,w: 56,h: 66,frames: 1},
     TapperGameplay: {sx: 0,sy: 480,w: 512,h: 480,frames: 1}
@@ -26,8 +28,8 @@ var entidades = {
   e1: {sprite: 'NPC1', health: 1, A: 100},//Cliente
   j1: {sprite: 'Beer', health: 1, A: 100},//Jarra llena
   j2: {sprite: 'Glass', health: 1, A: 100},//Jarra vacia
-  tip: {sprite: 'Beer', health: 1, A: 100},//Propina (Cambiar cuando este implementado)
-  vida:{sprite: 'Beer', health: 1, A: 100}//Barra de vidas (Cambiar cuando este implementado)
+  tip: {sprite: 'Tip', health: 1, A: 100},//Propina (Cambiar cuando este implementado)
+  vida:{sprite: 'Life', health: 1, A: 100}//Barra de vidas 
 };
 /*
  * Array que contiene la informacion para los niveles
@@ -112,6 +114,14 @@ var GameManager= new function(){
     this.setVidasJugador=function(nVidas){
         this.vidasJugador=nVidas;
     };
+
+     /*
+     * Devuelve el numero de vidas que tiene un jugador
+     */
+    this.getVidasJugador=function(){
+      return this.vidasJugador;
+    };
+
     /*
      * Indica el numero de clientes del nivel
      * @param {number} maxClientes
@@ -157,7 +167,7 @@ var GameManager= new function(){
      */
     this.genTip=function(){
         //Generamos un resultado combinacion de un aleatorio(0 a 0.9) * la probabilidad de recibir una + tiempo sin recibir una propina
-        var resultado=(parseFloat(Math.random().toFixed(1))*this.probPropina)+this.tPropina;
+        var resultado=(parseFloat(Math.random() * 1) + 1)*this.probPropina+this.tPropina;
         if(resultado<1){
             this.tPropina+=0.05;
             return false;
@@ -281,6 +291,7 @@ var playGame = function() {
     }
     //Generacion del nivel
     board.add(new GenNiveles(niveles[GameManager.nivel],GameManager.estado()));
+    //board.add(new GenVidas());
     Game.setBoard(1,board);
     Game.setBoard(2,new GamePoints(GameManager.puntos));
 };
@@ -315,26 +326,41 @@ var loseGame = function() {
 };
 /*-----------------------------BARRA DE VIDAS---------------------------------*/
 var GenVidas=function(){
-    this.SpriteVidas={};
+
+    //this.SpriteVidas={x:Game.width - 20, y: Game.height-20};
+
     /*
      * Genera el numeros de vidas dependiendo del valor en el GameManager
      */
-    this.generarVidas=function(){
-        
-    };
+    this.vidasList = [];
+    var vida;
+    //this.generarVidas = function(){
+        for( i=0; i < GameManager.getVidasJugador(); i++){
+            var v = entidades["vida"],ov = {x:Game.width - 20 - i*20, y: Game.height-20 - i*20};
+            vida= new Vida(v,ov);
+            this.vidasList[this.vidasList.length]=vida;
+            thisboard.add(vida);
+        }
+   // };
+
+    this.removeVidas= function(){
+        this.board.remove(this.vidasList[this.vidasList.length]);
+    }
 };
 GenVidas.prototype.draw=function(ctx){};
 GenVidas.prototype.step=function(dt){
     
 };
-var Vida=function(){
-    
+var Vida=function(blueprint,override){
+    this.setup(blueprint.sprite,blueprint);
+    this.merge(override);
 };
 Vida.prototype = new Sprite();
 
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
     GameManager.resetNivel();
+    //GenVidas.generarVidas();
     this.velAparicion= config.velSpawn;//multiplicador de la velocidad de aparacion de los enemigos
     this.velCliente=config.velCliente;//Velocidad de movimiento del cliente
     this.num=config.nClientes; //maximo clientes
@@ -583,11 +609,21 @@ var Tip=function(blueprint,override){
 };
 Tip.prototype = new Sprite();
 Tip.prototype.type = OBJECT_TIP;
-Tip.prototype.baseParameters = { eraseTime:0,borrar:0};
+Tip.prototype.baseParameters = {t:0, eraseTime:0,borrar:0, frame:0};
 
 Tip.prototype.step=function(dt){
     var collision = this.board.collide(this,OBJECT_PLAYER);//El jugador la recoge
     this.points=1000;
+
+    //Animaciond el sprite para que fire la moneda
+    this.t += dt;
+    if(Math.trunc(this.t)%2===0){
+
+    if(this.frame <10) this.frame++;
+    else this.frame=0;
+     
+    }
+
     if(collision){
         Game.points += this.points || 50;
         GameManager.puntos += this.points || 50;
