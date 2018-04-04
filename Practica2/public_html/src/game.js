@@ -98,6 +98,7 @@ var GameManager= new function(){
                 break;
             case "vidasJugador":
                 this.vidasJugador+=accion;
+                if(accion<0) GenVidas.removeVida();
                 break;
             case "finNivel":
                 this.finNivel=true;
@@ -291,9 +292,9 @@ var playGame = function() {
     }
     //Generacion del nivel
     board.add(new GenNiveles(niveles[GameManager.nivel],GameManager.estado()));
-    //board.add(new GenVidas());
     Game.setBoard(1,board);
     Game.setBoard(2,new GamePoints(GameManager.puntos));
+    GenVidas.generarVidas(board);
 };
 //Partida ganada
 var winGame = function() {
@@ -333,19 +334,20 @@ var GenVidas=new function(){
      * Genera el numeros de vidas dependiendo del valor en el GameManager
      */
     this.vidasList = [];
-    var vida;
-    this.generarVidas = function(){
-        for( i=0; i < GameManager.getVidasJugador(); i++){
-            var v = entidades["vida"],ov = {x:Game.width - 20 - i*20, y: Game.height-20 - i*20};
-            vida= new Vida(v,ov);
-            this.vidasList[this.vidasList.length]=vida;
-            Game.setBoard(3,vida);
+    this.board;
+
+    this.generarVidas = function(board){
+        this.board=board;
+        for( i=0; i <GameManager.getVidasJugador(); i++){
+            ov = {x:Game.width - 20 - i*20, y: 5}; 
+            this.vidasList.push(new Vida(entidades["vida"],ov));
+            board.add( this.vidasList[this.vidasList.length-1]);
         }
     };
 
-    this.removeVidas= function(){
+    this.removeVida= function(){
         this.board.remove(this.vidasList[this.vidasList.length-1]);
-        this.vidasList[this.vidasList.length-1]=null;
+        this.vidasList.pop();
     };
 };
 var Vida=function(blueprint,override){
@@ -357,7 +359,6 @@ Vida.prototype.step= function(dt){};
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
     GameManager.resetNivel();
-    GenVidas.generarVidas();
     this.velAparicion= config.velSpawn;//multiplicador de la velocidad de aparacion de los enemigos
     this.velCliente=config.velCliente;//Velocidad de movimiento del cliente
     this.num=config.nClientes; //maximo clientes
@@ -365,12 +366,12 @@ var GenNiveles=function(config,callback){
     this.actuales=0; //contador de clientes que se han generado
     this.callback=callback;
     this.distBack=config.distBack;
-    
+
     GameManager.setMaxClientes(this.num);
     GameManager.setVidasJugador(config.nVidas);
     GameManager.setVelJarra(config.velJarra);
     GameManager.setProbPropina(config.tipProb);
-    
+
 };
 GenNiveles.prototype.draw=function(ctx){};
 GenNiveles.prototype.step=function(dt){
