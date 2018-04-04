@@ -179,15 +179,15 @@ var StartScreen = function StartScreen(maxPuntos,startGame,tableScreen){
   this.draw = function(ctx) {
     // Foreground
     ctx.fillStyle = "#FFFFFF";
-    this.title="Tapper";
+    this.title="Tapper 2: The Root beer";
     this.puntos="Puntuacion maxima: "+ maxPuntos +" pts";
     this.subtitle="Pulsa espacio para iniciar";
     this.subtitle2="Pulsa enter para ver la tabla de puntuaciones";
-    ctx.font = "bold 40px bangers";
+    ctx.font = "40px bangers";
     var measure = ctx.measureText(this.title);  
     ctx.fillText(this.title,Game.width/2 - measure.width/2,Game.height/3);
     
-    ctx.font = "bold 20px bangers";
+    ctx.font = "20px bangers";
     var measure4 = ctx.measureText(this.puntos);
     ctx.fillText(this.puntos,Game.width/2 - measure4.width/2,Game.height/3 + 40);
     var measure2 = ctx.measureText(this.subtitle);
@@ -264,7 +264,7 @@ var RecordScreen= function LoseScreen(callback){
     var title="Game Over";
     var measure = ctx.measureText(title);  
     ctx.fillText(title,Game.width/2 - measure.width/2,50);
-    ctx.font = "bold 20px bangers";
+    ctx.font = "20px bangers";
     var subtitle="Nuevo record!!!";
     var measure2 = ctx.measureText(subtitle);
     ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/4 + 40);
@@ -280,7 +280,7 @@ var RecordScreen= function LoseScreen(callback){
     ctx.fillText(ltr,Game.width/2 - measure3.width/2,Game.height/4 + 135);
     
     //fechas de la letra activa
-    ctx.font = "bold 20px bangers";
+    ctx.font = "20px bangers";
     var posX=[Game.width/2 - measure3.width/2 +1 ,Game.width/2 - measure3.width/2+35,Game.width/2 - measure3.width/2+70];
     ctx.fillText("\u25B2", posX[pos], Game.height/4 + 100);
     ctx.fillText("\u25BC", posX[pos],Game.height/4 + 155);
@@ -310,7 +310,7 @@ var TitleScreen = function TitleScreen(title,subtitle,callback) {
     var measure = ctx.measureText(title);  
     ctx.fillText(title,Game.width/2 - measure.width/2,Game.height/2);
     
-    ctx.font = "bold 20px bangers";
+    ctx.font = "20px bangers";
     var measure2 = ctx.measureText(subtitle);
     ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);      
   };
@@ -554,7 +554,7 @@ var GamePoints = function(puntos) {
 var FondoScreen=function(){
     this.step=function(){};
     this.draw = function(ctx) {
-    ctx.fillStyle = "rgba(0,0,109,0.7)";
+    ctx.fillStyle = "rgba(0,0,107,0.5)";
     ctx.fillRect(0, 0, Game.width, Game.height);
   };
 };

@@ -10,12 +10,26 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-  <div id='container'>
-    <canvas id='game' width='512' height='480'></canvas>
-  </div>
+    <div id="leftContainer">
+      <h1>Tapper 2: The Root beer</h1>
+      <h3>Como jugar:</h3>
+      <ul>
+          <li>Mueve a tu Barman arriba y abajo con las flechas por las cuatro barras.</li>
+          <li>Cuando aparezca un cliente lánzale una jarra (tecla Espacio).</li>
+          <li>Cuando el cliente la recoja te la devolverá vacía tienes que cogerla antes de que caiga al suelo o perderás una vida.</li>
+          <li>Ten cuidado los clientes que lleguen al final de barra se marcharan insatisfechos y perderás una vida.</li>
+          <li>Lo mismo ocurre si lanzas una jarra y esta llega al final sin que la recoja ningún cliente.</li>
+          <li>Lo mismo ocurre si lanzas una jarra y esta llega al final sin que la recoja ningún cliente.</li>
+          <li>También te puedes mover hacia la izquierda para lanzar una jarra y acortar el recorrido de la misma.</li>
+          <li>Para terminar completa el nivel sin perder todas las vidas y podrás pasar al siguiente.</li>
+      </ul>
+    </div>  
+    <div id='container'>
+      <canvas id='game' width='512' height='480'></canvas>
+    </div>
     <script type="text/javascript" src='src/jquery-3.3.1.min.js'></script>
-  <script src='src/engine.js'></script>
-  <script src='src/game.js'></script>
+    <script src='src/engine.js'></script>
+    <script src='src/game.js'></script>
 </body>
 </html>
 
