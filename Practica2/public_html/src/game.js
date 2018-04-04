@@ -167,7 +167,7 @@ var GameManager= new function(){
      */
     this.genTip=function(){
         //Generamos un resultado combinacion de un aleatorio(0 a 0.9) * la probabilidad de recibir una + tiempo sin recibir una propina
-        var resultado=(parseFloat(Math.random() * 1) + 1)*this.probPropina+this.tPropina;
+        var resultado=(parseFloat(Math.random().toFixed(1))*this.probPropina)+this.tPropina;
         if(resultado<1){
             this.tPropina+=0.05;
             return false;
@@ -334,17 +334,18 @@ var GenVidas=function(){
      */
     this.vidasList = [];
     var vida;
-    //this.generarVidas = function(){
+    this.generarVidas = function(){
         for( i=0; i < GameManager.getVidasJugador(); i++){
             var v = entidades["vida"],ov = {x:Game.width - 20 - i*20, y: Game.height-20 - i*20};
             vida= new Vida(v,ov);
             this.vidasList[this.vidasList.length]=vida;
-            thisboard.add(vida);
+            Game.setBoard(3,vida);
         }
-   // };
+    };
 
     this.removeVidas= function(){
-        this.board.remove(this.vidasList[this.vidasList.length]);
+        this.board.remove(this.vidasList[this.vidasList.length-1]);
+        this.vidasList[this.vidasList.length-1]=null;
     }
 };
 GenVidas.prototype.draw=function(ctx){};
@@ -360,7 +361,7 @@ Vida.prototype = new Sprite();
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
     GameManager.resetNivel();
-    //GenVidas.generarVidas();
+    GenVidas.generarVidas();
     this.velAparicion= config.velSpawn;//multiplicador de la velocidad de aparacion de los enemigos
     this.velCliente=config.velCliente;//Velocidad de movimiento del cliente
     this.num=config.nClientes; //maximo clientes

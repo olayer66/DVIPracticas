@@ -251,7 +251,7 @@ var RecordScreen= function LoseScreen(callback){
     if(Game.keys['left'] && pos>0){
         pos--;
         Game.keys['left'] = false;
-    }else if(Game.keys['right']&& pos<3){
+    }else if(Game.keys['right']&& pos<2){
         pos++;
         Game.keys['right'] = false;
     }
@@ -416,7 +416,7 @@ Bloqueo.prototype.setup=function(x,y){
     this.h=50;
 };
 Bloqueo.prototype.draw=function(ctx){
-    ctx.fillStyle = "rgba(85,191,63,1)";
+    ctx.fillStyle = "rgba(85,191,63,0)";
     ctx.fillRect(this.x,this.y,this.w,this.h);
 };
 
