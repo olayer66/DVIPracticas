@@ -325,7 +325,7 @@ var loseGame = function() {
   GameManager.puntos=0;
 };
 /*-----------------------------BARRA DE VIDAS---------------------------------*/
-var GenVidas=function(){
+var GenVidas=new function(){
 
     //this.SpriteVidas={x:Game.width - 20, y: Game.height-20};
 
@@ -346,18 +346,14 @@ var GenVidas=function(){
     this.removeVidas= function(){
         this.board.remove(this.vidasList[this.vidasList.length-1]);
         this.vidasList[this.vidasList.length-1]=null;
-    }
-};
-GenVidas.prototype.draw=function(ctx){};
-GenVidas.prototype.step=function(dt){
-    
+    };
 };
 var Vida=function(blueprint,override){
     this.setup(blueprint.sprite,blueprint);
     this.merge(override);
 };
 Vida.prototype = new Sprite();
-
+Vida.prototype.step= function(dt){};
 /*-------------------------GENERADOR DE NIVELES-------------------------------*/
 var GenNiveles=function(config,callback){
     GameManager.resetNivel();
