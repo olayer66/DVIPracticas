@@ -1,0 +1,12 @@
+{
+    "0": {"name":"AAA","puntos":"3000"},
+    "1": {"name":"BBB","puntos":"2000"},
+    "2": {"name":"CCC","puntos":"1000"},
+    "3": {"name":"DDD","puntos":"900"},
+    "4": {"name":"EEE","puntos":"800"},
+    "5": {"name":"FFF","puntos":"700"},
+    "6": {"name":"GGG","puntos":"600"},
+    "7": {"name":"HHH","puntos":"500"},
+    "8": {"name":"III","puntos":"400"},
+    "9": {"name":"JJJ","puntos":"300"}               
+}
