@@ -52,7 +52,7 @@ var Game = new function() {
   
 
   // Handle Input
-  var KEY_CODES = { 38:'up', 40:'down', 32 :'fire',13:'enter'};
+  var KEY_CODES = { 38:'up', 40:'down', 39:'right', 37:'left', 32 :'fire',13:'enter'};
   this.keys = {};
 
   this.setupInput = function() {
@@ -179,32 +179,81 @@ var StartScreen = function StartScreen(maxPuntos,startGame,tableScreen){
   this.draw = function(ctx) {
     // Foreground
     ctx.fillStyle = "#FFFFFF";
-    this.title="Tapper";
+    this.title="Tapper 2: The Root beer";
     this.puntos="Puntuacion maxima: "+ maxPuntos +" pts";
     this.subtitle="Pulsa espacio para iniciar";
     this.subtitle2="Pulsa enter para ver la tabla de puntuaciones";
-    ctx.font = "bold 40px bangers";
+    ctx.font = "40px bangers";
     var measure = ctx.measureText(this.title);  
-    ctx.fillText(this.title,Game.width/2 - measure.width/2,Game.height/2);
+    ctx.fillText(this.title,Game.width/2 - measure.width/2,Game.height/3);
     
-    ctx.font = "bold 20px bangers";
+    ctx.font = "20px bangers";
     var measure4 = ctx.measureText(this.puntos);
-    ctx.fillText(this.puntos,Game.width/2 - measure4.width/2,Game.height/2 + 40);
+    ctx.fillText(this.puntos,Game.width/2 - measure4.width/2,Game.height/3 + 40);
     var measure2 = ctx.measureText(this.subtitle);
-    ctx.fillText(this.subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 70);
+    ctx.fillText(this.subtitle,Game.width/2 - measure2.width/2,Game.height/3 + 70);
     var measure3 = ctx.measureText(this.subtitle2);
-    ctx.fillText(this.subtitle2,Game.width/2 - measure3.width/2,Game.height/2 + 90);      
+    ctx.fillText(this.subtitle2,Game.width/2 - measure3.width/2,Game.height/3 + 90);      
   };
 };
-var LoseScreen= function LoseScreen(record,pos,puntos,callback){
+var RecordScreen= function LoseScreen(callback){
   var up = false;
+  var name="ZZZ";
   var letras=["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"];
   var let1=0,let2=0,let3=0;
+  var pos=0;
   this.step = function(dt) {
     if(!Game.keys['fire']) up = true;
     if(up && Game.keys['fire'] && callback) {
         Game.keys['fire']=false;
-        callback();
+        name=letras[let1]+letras[let2]+letras[let3];
+        callback(name);
+    }
+    //Seleccion de la letra
+    if(Game.keys['up']){
+        switch (pos){
+            case 0:
+                if(let1<letras.length-1)
+                    let1++;
+                break;
+            case 1:
+                if(let2<letras.length-1)
+                    let2++;
+                break;
+            case 2:
+                if(let3<letras.length-1)
+                    let3++;
+                break;
+            default:
+                console.log("Posicion no valida"); 
+        }
+        Game.keys['up'] = false;
+    }else if(Game.keys['down']){
+        switch (pos){
+            case 0:
+                if(let1>0)
+                    let1--;
+                break;
+            case 1:
+                if(let2>0)
+                    let2--;
+                break;
+            case 2:
+                if(let3>0)
+                    let3--;
+                break;
+            default:
+                console.log("Posicion no valida");              
+        }
+        Game.keys['down'] = false;
+    }
+    //Movimiento de la seleccion de letra
+    if(Game.keys['left'] && pos>0){
+        pos--;
+        Game.keys['left'] = false;
+    }else if(Game.keys['right']&& pos<2){
+        pos++;
+        Game.keys['right'] = false;
     }
   };
   this.draw = function(ctx) {
@@ -214,27 +263,33 @@ var LoseScreen= function LoseScreen(record,pos,puntos,callback){
     ctx.font = "bold 40px bangers";
     var title="Game Over";
     var measure = ctx.measureText(title);  
-    ctx.fillText(title,Game.width/2 - measure.width/2,Game.height/2);
+    ctx.fillText(title,Game.width/2 - measure.width/2,50);
+    ctx.font = "20px bangers";
+    var subtitle="Nuevo record!!!";
+    var measure2 = ctx.measureText(subtitle);
+    ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/4 + 40);
+    //Introdue el nombre
+    var subtitle="Introduce tu nombre:";
+    var measure2 = ctx.measureText(subtitle);
+    ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/4 + 80);
+    
+    //Aqui van las letras
+    ctx.font = "bold 40px bangers";
+    var ltr=letras[let1]+"  "+letras[let2]+"  "+letras[let3];
+    var measure3 = ctx.measureText(ltr);
+    ctx.fillText(ltr,Game.width/2 - measure3.width/2,Game.height/4 + 135);
+    
+    //fechas de la letra activa
+    ctx.font = "20px bangers";
+    var posX=[Game.width/2 - measure3.width/2 +1 ,Game.width/2 - measure3.width/2+35,Game.width/2 - measure3.width/2+70];
+    ctx.fillText("\u25B2", posX[pos], Game.height/4 + 100);
+    ctx.fillText("\u25BC", posX[pos],Game.height/4 + 155);
+
+    //Volver menu
     ctx.font = "bold 20px bangers";
-    if(record){
-        var subtitle="Nuevo record!!!";
-        var measure2 = ctx.measureText(subtitle);
-        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
-             
-        var subtitle="Introduce tu nombre:";
-        var measure2 = ctx.measureText(subtitle);
-        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 80);
-        //Aqui van las letras
-        
-        var subtitle="Pulsa espacio para volver a jugar";
-        var measure2 = ctx.measureText(subtitle);
-        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 100);     
-    } else {
-        var subtitle="Pulsa espacio para volver a jugar";
-        
-        var measure2 = ctx.measureText(subtitle);
-        ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);
-    }
+    var subtitle="Pulsa espacio para volver al menu";
+    var measure4 = ctx.measureText(subtitle);
+    ctx.fillText(subtitle,Game.width/2 - measure4.width/2,Game.height- 50);     
   };
 }; 
 var TitleScreen = function TitleScreen(title,subtitle,callback) {
@@ -255,7 +310,7 @@ var TitleScreen = function TitleScreen(title,subtitle,callback) {
     var measure = ctx.measureText(title);  
     ctx.fillText(title,Game.width/2 - measure.width/2,Game.height/2);
     
-    ctx.font = "bold 20px bangers";
+    ctx.font = "20px bangers";
     var measure2 = ctx.measureText(subtitle);
     ctx.fillText(subtitle,Game.width/2 - measure2.width/2,Game.height/2 + 40);      
   };
@@ -279,7 +334,7 @@ var GameBoard = function() {
   // Mark an object for removal
   this.remove = function(obj) { 
     var idx = this.removed.indexOf(obj);
-    if(idx == -1) {
+    if(idx === -1) {
       this.removed.push(obj); 
       return true;
     } else {
@@ -294,7 +349,7 @@ var GameBoard = function() {
   this.finalizeRemoved = function() {
     for(var i=0,len=this.removed.length;i<len;i++) {
       var idx = this.objects.indexOf(this.removed[i]);
-      if(idx != -1) {
+      if(idx !== -1) {
         this.cnt[this.removed[i].type]--;
         this.objects.splice(idx,1);
       }
@@ -342,7 +397,7 @@ var GameBoard = function() {
   // match against an optional type
   this.collide = function(obj,type) {
     return this.detect(function() {
-      if(obj != this) {
+      if(obj !== this) {
        var col = (!type || this.type & type) && board.overlap(obj,this);
        return col ? this : false;
       }
@@ -361,7 +416,7 @@ Bloqueo.prototype.setup=function(x,y){
     this.h=50;
 };
 Bloqueo.prototype.draw=function(ctx){
-    ctx.fillStyle = "rgba(85,191,63,1)";
+    ctx.fillStyle = "rgba(85,191,63,0)";
     ctx.fillRect(this.x,this.y,this.w,this.h);
 };
 
@@ -379,6 +434,11 @@ Sprite.prototype.setup = function(sprite,props) {
   this.h =  SpriteSheet.map[sprite].h;
 };
 
+Sprite.prototype.change = function() {
+  if(this.sprite[this.sprite.length-1]==='x')this.sprite='NPC'+this.sprite[3];
+  else this.sprite+='x';
+};
+
 Sprite.prototype.merge = function(props) {
   if(props) {
     for (var prop in props) {
@@ -394,60 +454,6 @@ Sprite.prototype.draw = function(ctx) {
 Sprite.prototype.hit = function(damage) {
   this.board.remove(this);
 };
-
-
-var Level = function(levelData,callback) {
-  this.levelData = [];
-  for(var i =0; i<levelData.length; i++) {
-    this.levelData.push(Object.create(levelData[i]));
-  }
-  this.t = 0;
-  this.callback = callback;
-};
-
-Level.prototype.step = function(dt) {
-  var idx = 0, remove = [], curShip = null;
-
-  // Update the current time offset
-  this.t += dt * 1000;
-
-  //   Start, End,  Gap, Type,   Override
-  // [ 0,     4000, 500, 'step', { x: 100 } ]
-  while((curShip = this.levelData[idx]) && 
-        (curShip[0] < this.t + 2000)) {
-    // Check if we've passed the end time 
-    if(this.t > curShip[1]) {
-      remove.push(curShip);
-    } else if(curShip[0] < this.t) {
-      // Get the enemy definition blueprint
-      var enemy = enemies[curShip[3]],
-          override = curShip[4];
-
-      // Add a new enemy with the blueprint and override
-      this.board.add(new Enemy(enemy,override));
-
-      // Increment the start time by the gap
-      curShip[0] += curShip[2];
-    }
-    idx++;
-  }
-
-  // Remove any objects from the levelData that have passed
-  for(var i=0,len=remove.length;i<len;i++) {
-    var remIdx = this.levelData.indexOf(remove[i]);
-    if(remIdx != -1) this.levelData.splice(remIdx,1);
-  }
-
-  // If there are no more enemies on the board or in 
-  // levelData, this level is done
-  if(this.levelData.length === 0 && this.board.cnt[OBJECT_ENEMY] === 0) {
-    if(this.callback) this.callback();
-  }
-
-};
-
-Level.prototype.draw = function(ctx) { };
-
 
 var TouchControls = function() {
 
@@ -501,12 +507,12 @@ var TouchControls = function() {
       } 
     }
 
-    if(e.type == 'touchstart' || e.type == 'touchend') {
+    if(e.type === 'touchstart' || e.type === 'touchend') {
       for(i=0;i<e.changedTouches.length;i++) {
         touch = e.changedTouches[i];
         x = touch.pageX / Game.canvasMultiplier - Game.canvas.offsetLeft;
         if(x > 4 * unitWidth) {
-          Game.keys['fire'] = (e.type == 'touchstart');
+          Game.keys['fire'] = (e.type === 'touchstart');
         }
       }
     }
@@ -544,15 +550,17 @@ var GamePoints = function(puntos) {
 
   this.step = function(dt) { };
 };
+
 var FondoScreen=function(){
     this.step=function(){};
     this.draw = function(ctx) {
-    ctx.fillStyle = "rgba(0,0,109,0.7)";
+    ctx.fillStyle = "rgba(0,0,107,0.5)";
     ctx.fillRect(0, 0, Game.width, Game.height);
   };
 };
-var laTabla=function laTabla(tabla,callback){
+var laTabla=function (tabla,callback){
   var up = false;
+  var pointsLength = 8;
   this.tabla=tabla;
   this.step = function(dt) {
     if(!Game.keys['fire']) up = true;
@@ -570,8 +578,12 @@ var laTabla=function laTabla(tabla,callback){
     var measure = ctx.measureText(this.title);  
     ctx.fillText(this.title,Game.width/2 - measure.width/2,40);
     ctx.font = "bold 30px bangers";
-    for(var i=0;i<this.tabla.length;i++)
-        ctx.fillText(i+1+"\u0029 "+this.tabla[i].name+" "+this.tabla[i].puntos+" pts",Game.width/2 - measure.width/2,60+(30*(i+1)));
+    for(var i=0;i<this.tabla.length;i++){
+        var txt = "" + this.tabla[i].puntos;
+        var x = pointsLength - txt.length, zeros = "";
+        while(x-- > 0) { zeros += "0"; }
+        ctx.fillText(i+1+"\u0029 "+this.tabla[i].name+" "+zeros+txt+" pts",Game.width/2 - measure.width/2,60+(30*(i+1)));
+    }
     ctx.fillText("Pulsa espacio para volver",Game.width/2 - measure.width/2,Game.height - 20);
   };
 };
