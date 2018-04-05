@@ -37,16 +37,16 @@ var entidades = {
  * @returns {datosNivel} 
  */
 var niveles = {//Si se modifica el numero de nieveles cambiar el parametro en el GameManager 
-  1:{nClientes:8,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 150,tipProb:0.5},
-  2:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:100, distBack: 140,tipProb:0.5},
-  3:{nClientes:12,nVidas:4,velCliente:80,velJarra:100,velSpawn:80, distBack: 130,tipProb:0.5},
-  4:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 120,tipProb:0.6},
-  5:{nClientes:14,nVidas:3,velCliente:100,velJarra:100,velSpawn:80, distBack: 100,tipProb:0.6},
-  6:{nClientes:14,nVidas:3,velCliente:120,velJarra:100,velSpawn:80, distBack: 90,tipProb:0.8},
-  7:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:80, distBack: 70,tipProb:0.8},
-  8:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60, distBack: 60,tipProb:1},
-  9:{nClientes:16,nVidas:3,velCliente:120,velJarra:120,velSpawn:60, distBack: 40,tipProb:1},
-  10:{nClientes:16,nVidas:3,velCliente:140,velJarra:120,velSpawn:60, distBack: 25,tipProb:1.2}
+  1:{nClientes:8,nVidas:8,velCliente:80,velJarra:100,velSpawn:100, distBack: 150,tipProb:0.5},
+  2:{nClientes:12,nVidas:8,velCliente:80,velJarra:100,velSpawn:100, distBack: 140,tipProb:0.5},
+  3:{nClientes:12,nVidas:8,velCliente:80,velJarra:100,velSpawn:80, distBack: 130,tipProb:0.5},
+  4:{nClientes:14,nVidas:8,velCliente:100,velJarra:100,velSpawn:80, distBack: 120,tipProb:0.6},
+  5:{nClientes:14,nVidas:7,velCliente:100,velJarra:100,velSpawn:80, distBack: 100,tipProb:0.6},
+  6:{nClientes:14,nVidas:7,velCliente:120,velJarra:100,velSpawn:80, distBack: 90,tipProb:0.8},
+  7:{nClientes:16,nVidas:7,velCliente:120,velJarra:120,velSpawn:80, distBack: 70,tipProb:0.8},
+  8:{nClientes:16,nVidas:7,velCliente:120,velJarra:120,velSpawn:60, distBack: 60,tipProb:1},
+  9:{nClientes:16,nVidas:7,velCliente:120,velJarra:120,velSpawn:60, distBack: 40,tipProb:1},
+  10:{nClientes:16,nVidas:6,velCliente:140,velJarra:120,velSpawn:60, distBack: 25,tipProb:1.2}
   };
 //Variables de control de las colisiones
 var OBJECT_FONDO = 1,
