@@ -8,8 +8,9 @@ and open the template in the editor.
     Author     : usuario_local
 */
 body{
-    background-color: aqua;
+    background-color: darkgrey;
 }
 canvas { 
-    background-color:black; 
+    background-color:black;
+    border: outset 3px black;
 }
