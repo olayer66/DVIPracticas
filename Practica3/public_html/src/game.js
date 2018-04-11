@@ -18,7 +18,7 @@ Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","mainTitle.
 //JSON'S (falta crear el de piranha.png)
 Q.preload(["mario_small.json","coin.json","bloopa.json","goomba.json"]);
 //Musica
-Q.preload(["music_main.ogg"]);
+Q.preload(["music_main.ogg","jump_small.ogg","kill_enemy.ogg"]);
 //Funcion de inicio
 
 Q.preload(function(){
@@ -36,10 +36,6 @@ Q.preload(function(){
 Q.Sprite.extend("Bloopa",{ 
     init: function(p) { 
         this._super(p, { 
-            hitPoints: 10, 
-            damage: 5, 
-            x: 5, 
-            y: 1,
             sheet: "bloopa",
             frame: 0
         }); 
@@ -83,32 +79,36 @@ Q.Sprite.extend("Mario",{
             sheet:"marioR",
             frame:0
         });
-        this.add("2d");
-        this.add("platformerControls");
+        this.add("2d,platformerControls,animation");
         this.on("bump.bottom",this,"stomp");
     },stomp:function(collision) {
-        if(collision.obj.isA("Enemy")) {
+        if(collision.obj.isA("Bloopa")) {
            collision.obj.destroy();
-         this.p.vy = 0;// make the player jump
+           Q.audio.play('kill_enemy.ogg');
+           this.p.vy = -250;// make the player jump
+        }
+    },
+    step:function(){
+        if(Q.inputs['up']) {
+            Q.audio.play('jump_small.ogg');
         }
     }
 });
 /*--------------------------------ESCENAS-------------------------------------*/
 //Nivel de testing
 Q.scene("level1",function(stage) {
-    var mario= new Q.Mario({x:150,y:380});
-    var b= new Q.Bloopa();
+    var mario= new Q.Mario({x:630,y:400});
+    var b= new Q.Bloopa({x:730,y:400});
     var a= new Q.Goomba();
     var c = new Q.Piranha();
     Q.stageTMX("level.tmx",stage);
-   // Q.audio.play('music_main.ogg',{ loop:true});
+    //Q.audio.play('music_main.ogg',{ loop:true});
     stage.insert(mario);
     stage.insert(b);
     stage.add("viewport").follow(mario,{x:true,y:false});
     stage.viewport.offsetX=150;
-    stage.viewport.offsetY=10000;
-    stage.insert(a);
-    stage.insert(c);
+    //stage.insert(a);
+    //stage.insert(c);
     
 });
 /*---------------------------------PRUEBAS------------------------------------*/
