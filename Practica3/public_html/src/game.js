@@ -25,14 +25,13 @@ Q.preload(function(){
     Q.compileSheets("tiles.png","tiles.json"); //nuevo
     Q.compileSheets("mario_small.png","mario_small.json");
     Q.compileSheets("bloopa.png","bloopa.json");
+    Q.compileSheets("goomba.png","goomba.json");
     Q.loadTMX("level.tmx", function() {
     Q.stageScene("level1");
     });
 });
 
 /*-----------------------------ENEMIGOS----------------------------------*/
-
-
 
 Q.Sprite.extend("Bloopa",{ 
     init: function(p) { 
@@ -45,10 +44,36 @@ Q.Sprite.extend("Bloopa",{
             frame: 0
         }); 
         this.add("2d");
-       // this.add("platformerControls");
-        
     }
 }); 
+
+Q.Sprite.extend("Goomba",{ 
+    init: function(p) { 
+        this._super(p, { 
+            hitPoints: 10, 
+            damage: 5, 
+            x: 5, 
+            y: 1,
+            sheet: "goomba",
+            frame: 0
+        }); 
+        this.add("2d");        
+    }
+}); 
+
+Q.Sprite.extend("Piranha",{ 
+    init: function(p) { 
+        this._super(p, { 
+            hitPoints: 10, 
+            damage: 5, 
+            x: 5, 
+            y: 1,
+            sheet: "piranha",
+            frame: 0
+        }); 
+        this.add("2d");        
+    }
+});
 
 
 /*--------------------------------JUGADOR-------------------------------------*/
@@ -73,6 +98,8 @@ Q.Sprite.extend("Mario",{
 Q.scene("level1",function(stage) {
     var mario= new Q.Mario({x:150,y:380});
     var b= new Q.Bloopa();
+    var a= new Q.Goomba();
+    var c = new Q.Piranha();
     Q.stageTMX("level.tmx",stage);
    // Q.audio.play('music_main.ogg',{ loop:true});
     stage.insert(mario);
@@ -80,6 +107,8 @@ Q.scene("level1",function(stage) {
     stage.add("viewport").follow(mario,{x:true,y:false});
     stage.viewport.offsetX=150;
     stage.viewport.offsetY=10000;
+    stage.insert(a);
+    stage.insert(c);
     
 });
 /*---------------------------------PRUEBAS------------------------------------*/
