@@ -77,8 +77,9 @@ Q.scene("level1",function(stage) {
    // Q.audio.play('music_main.ogg',{ loop:true});
     stage.insert(mario);
     stage.insert(b);
-    stage.add("viewport").follow(mario);
-    stage.centerOn(150,380);
+    stage.add("viewport").follow(mario,{x:true,y:false});
+    stage.viewport.offsetX=150;
+    stage.viewport.offsetY=10000;
     
 });
 /*---------------------------------PRUEBAS------------------------------------*/
