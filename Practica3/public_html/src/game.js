@@ -20,19 +20,42 @@ Q.preload(["mario_small.json","coin.json","bloopa.json","goomba.json"]);
 //Musica
 Q.preload(["music_main.ogg"]);
 //Funcion de inicio
+
 Q.preload(function(){
+    Q.compileSheets("tiles.png","tiles.json"); //nuevo
     Q.compileSheets("mario_small.png","mario_small.json");
+    Q.compileSheets("bloopa.png","bloopa.json");
     Q.loadTMX("level.tmx", function() {
     Q.stageScene("level1");
     });
 });
-/*-----------------------------SPRITE SHEETS----------------------------------*/
+
+/*-----------------------------ENEMIGOS----------------------------------*/
+
+
+
+Q.Sprite.extend("Bloopa",{ 
+    init: function(p) { 
+        this._super(p, { 
+            hitPoints: 10, 
+            damage: 5, 
+            x: 5, 
+            y: 1,
+            sheet: "bloopa",
+            frame: 0
+        }); 
+        this.add("2d");
+       // this.add("platformerControls");
+        
+    }
+}); 
+
 
 /*--------------------------------JUGADOR-------------------------------------*/
 Q.Sprite.extend("Mario",{
     init:function(p) {
         this._super(p, {
-            sheet:"mario_small",
+            sheet:"marioR",
             frame:0
         });
         this.add("2d");
@@ -40,8 +63,8 @@ Q.Sprite.extend("Mario",{
         this.on("bump.bottom",this,"stomp");
     },stomp:function(collision) {
         if(collision.obj.isA("Enemy")) {
-            collision.obj.destroy();
-            this.p.vy = -500;// make the player jump
+           collision.obj.destroy();
+         this.p.vy = 0;// make the player jump
         }
     }
 });
@@ -49,9 +72,11 @@ Q.Sprite.extend("Mario",{
 //Nivel de testing
 Q.scene("level1",function(stage) {
     var mario= new Q.Mario({x:150,y:380});
+    var b= new Q.Bloopa();
     Q.stageTMX("level.tmx",stage);
-    Q.audio.play('music_main.ogg',{ loop:true});
+   // Q.audio.play('music_main.ogg',{ loop:true});
     stage.insert(mario);
+    stage.insert(b);
     stage.add("viewport").follow(mario);
     stage.centerOn(150,380);
     
