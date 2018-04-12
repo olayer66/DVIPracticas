@@ -113,22 +113,22 @@ Q.Sprite.extend("Mario",{
     },stompB:function(collision) {
         salto=false;
         Q.audio.stop("jump_small.ogg");
-        if(collision.obj.isA("Bloopa")) {
+        if(collision.obj.p.type===SPRITE_ENEMY) {
            collision.obj.destroy();        
            Q.audio.play('kill_enemy.ogg');
            this.p.vy = -300;// make the player jump
         }
     },
     stompR:function(collision) {
-        if(collision.obj.isA("Bloopa")) 
+        if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
     },
     stompL:function(collision) {
-        if(collision.obj.isA("Bloopa")) 
+        if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
     },
     stompT:function(collision) {
-        if(collision.obj.isA("Bloopa")) 
+        if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
     },
     step:function(){
