@@ -85,7 +85,7 @@ Q.Sprite.extend("Piranha",{
             x: 5, 
             y: 1,
             sheet: "piranha",
-            frame: 0
+            frame: 0,
             type: SPRITE_ENEMY,
             collisionMask: SPRITE_PLAYER | SPRITE_TILES | SPRITE_ENEMY
         }); 
@@ -135,15 +135,18 @@ Q.Sprite.extend("Mario",{
         if(Q.inputs['up'] && salto===false) {//salto
             this.p.gravity=0.4;
             salto=true;
-        if(this.p.vx > 0) {
-        this.play("run_right");
-        } else if(this.p.vx < 0) {
-         this.play("run_left");
-        } else {
-            this.play("stand_"+this.p.direction);
-        }
             Q.audio.play('jump_small.ogg');
         }
+        
+        if(this.p.vx > 0) {
+            this.play("run_right");
+        } else if(this.p.vx < 0) {
+            this.play("run_left");
+        } else {
+            if(this.p.direction =="right")this.play("stand_right");
+            else this.play("stand_left");
+        }
+
         if(!Q.inputs['up']){
             this.p.gravity=1;
         }
