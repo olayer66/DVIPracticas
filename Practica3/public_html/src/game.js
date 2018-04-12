@@ -27,7 +27,7 @@ Q.preload(function(){
     Q.compileSheets("bloopa.png","bloopa.json");
     Q.compileSheets("goomba.png","goomba.json");
     Q.loadTMX("level.tmx", function() {
-    Q.stageScene("level1");
+        Q.stageScene("level1");
     });
 });
 
@@ -72,7 +72,9 @@ Q.Sprite.extend("Piranha",{
 });
 
 
-/*--------------------------------JUGADOR-------------------------------------*/
+/*--------------------------------JUGADOR-------------------------------------*/var salto=false;
+var salto=false;
+var blqSalto=false;
 Q.Sprite.extend("Mario",{
     init:function(p) {
         this._super(p, {
@@ -82,16 +84,21 @@ Q.Sprite.extend("Mario",{
         this.add("2d,platformerControls,animation");
         this.on("bump.bottom",this,"stomp");
     },stomp:function(collision) {
+        salto=false;
+        Q.audio.stop("jump_small.ogg");
+        this.p.gravity=1;
         if(collision.obj.isA("Bloopa")) {
-           collision.obj.destroy();
+           collision.obj.destroy();        
            Q.audio.play('kill_enemy.ogg');
-           this.p.vy = -250;// make the player jump
+           this.p.vy = -300;// make the player jump
         }
     },
     step:function(){
-        if(Q.inputs['up']) {
+        if(Q.inputs['up'] && salto===false) {//salto
+            this.p.gravity=0.4;
+            salto=true;
             Q.audio.play('jump_small.ogg');
-        }
+        } 
     }
 });
 /*--------------------------------ESCENAS-------------------------------------*/
