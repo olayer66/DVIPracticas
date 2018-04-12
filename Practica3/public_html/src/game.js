@@ -1,4 +1,7 @@
 /*---------------------------CARGA DE QUINTUS---------------------------------*/
+var SPRITE_PLAYER = 1;
+var SPRITE_TILES = 2;
+var SPRITE_ENEMY = 4;
 /* global Quintus */
 var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
                 .include("Sprites, Scenes, Input, 2D, Anim, Touch, UI,TMX,Audio")//Librerias del quintus cargadas
@@ -27,17 +30,32 @@ Q.preload(function(){
     Q.compileSheets("bloopa.png","bloopa.json");
     Q.compileSheets("goomba.png","goomba.json");
     Q.loadTMX("level.tmx", function() {
-        Q.stageScene("level1");
+    Q.stageScene("level1");
     });
 });
 
+/*-----------------------------ANIMACIONES----------------------------------*/
+
+Q.animations('Mario', {
+  run_right: { frames: [0,1,2], rate: 1/5}, 
+  run_left: { frames: [15,16,17], rate:1/5 },
+  fire_right: { frames: [9,10,10], next: 'stand_right', rate: 1/30, trigger: "fired" },
+  fire_left: { frames: [20,21,21], next: 'stand_left', rate: 1/30, trigger: "fired" },
+  stand_right: { frames: [0], rate: 1 },
+  stand_left: { frames: [15], rate: 1},
+  fall_right: { frames: [2], loop: false },
+  fall_left: { frames: [14], loop: false }
+});
 /*-----------------------------ENEMIGOS----------------------------------*/
+
 
 Q.Sprite.extend("Bloopa",{ 
     init: function(p) { 
         this._super(p, { 
             sheet: "bloopa",
-            frame: 0
+            frame: 0,
+            type: SPRITE_ENEMY,
+            collisionMask: SPRITE_PLAYER | SPRITE_TILES
         }); 
         this.add("2d");
     }
@@ -51,7 +69,9 @@ Q.Sprite.extend("Goomba",{
             x: 5, 
             y: 1,
             sheet: "goomba",
-            frame: 0
+            frame: 0,
+            type: SPRITE_ENEMY,
+            collisionMask: SPRITE_PLAYER | SPRITE_TILES
         }); 
         this.add("2d");        
     }
@@ -66,6 +86,8 @@ Q.Sprite.extend("Piranha",{
             y: 1,
             sheet: "piranha",
             frame: 0
+            type: SPRITE_ENEMY,
+            collisionMask: SPRITE_PLAYER | SPRITE_TILES | SPRITE_ENEMY
         }); 
         this.add("2d");        
     }
@@ -79,7 +101,9 @@ Q.Sprite.extend("Mario",{
     init:function(p) {
         this._super(p, {
             sheet:"marioR",
-            frame:0
+            sprite:"Mario",
+            frame:0,
+            lifes:1
         });
         this.add("2d,platformerControls,animation");
         this.on("bump.bottom",this,"stompB");
@@ -111,6 +135,13 @@ Q.Sprite.extend("Mario",{
         if(Q.inputs['up'] && salto===false) {//salto
             this.p.gravity=0.4;
             salto=true;
+        if(this.p.vx > 0) {
+        this.play("run_right");
+        } else if(this.p.vx < 0) {
+         this.play("run_left");
+        } else {
+            this.play("stand_"+this.p.direction);
+        }
             Q.audio.play('jump_small.ogg');
         }
         if(!Q.inputs['up']){
@@ -128,7 +159,7 @@ Q.Sprite.extend("Mario",{
 Q.scene("level1",function(stage) {
     var mario= new Q.Mario({x:630,y:400});
     var b= new Q.Bloopa({x:730,y:400});
-    var a= new Q.Goomba();
+    var a= new Q.Goomba({x:780,y:450});
     var c = new Q.Piranha();
     Q.stageTMX("level.tmx",stage);
     //Q.audio.play('music_main.ogg',{ loop:true});
@@ -136,7 +167,7 @@ Q.scene("level1",function(stage) {
     stage.insert(b);
     stage.add("viewport").follow(mario,{x:true,y:false});
     stage.viewport.offsetX=150;
-    //stage.insert(a);
+    stage.insert(a);
     //stage.insert(c);
     
 });
