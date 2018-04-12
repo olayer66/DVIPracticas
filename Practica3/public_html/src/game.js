@@ -18,7 +18,7 @@ Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","mainTitle.
 //JSON'S (falta crear el de piranha.png)
 Q.preload(["mario_small.json","coin.json","bloopa.json","goomba.json"]);
 //Musica
-Q.preload(["music_main.ogg","jump_small.ogg","kill_enemy.ogg"]);
+Q.preload(["music_main.ogg","jump_small.ogg","kill_enemy.ogg","music_die.ogg"]);
 //Funcion de inicio
 
 Q.preload(function(){
@@ -82,23 +82,45 @@ Q.Sprite.extend("Mario",{
             frame:0
         });
         this.add("2d,platformerControls,animation");
-        this.on("bump.bottom",this,"stomp");
-    },stomp:function(collision) {
+        this.on("bump.bottom",this,"stompB");
+        this.on("bump.right",this,"stompR");
+        this.on("bump.left",this,"stompL");
+        this.on("bump.top",this,"stompT");
+    },stompB:function(collision) {
         salto=false;
         Q.audio.stop("jump_small.ogg");
-        this.p.gravity=1;
         if(collision.obj.isA("Bloopa")) {
            collision.obj.destroy();        
            Q.audio.play('kill_enemy.ogg');
            this.p.vy = -300;// make the player jump
         }
     },
+    stompR:function(collision) {
+        if(collision.obj.isA("Bloopa")) 
+            this.muerte();
+    },
+    stompL:function(collision) {
+        if(collision.obj.isA("Bloopa")) 
+            this.muerte();
+    },
+    stompT:function(collision) {
+        if(collision.obj.isA("Bloopa")) 
+            this.muerte();
+    },
     step:function(){
         if(Q.inputs['up'] && salto===false) {//salto
             this.p.gravity=0.4;
             salto=true;
             Q.audio.play('jump_small.ogg');
-        } 
+        }
+        if(!Q.inputs['up']){
+            this.p.gravity=1;
+        }
+    },
+    muerte:function(){
+        Q.audio.play('music_die.ogg');
+        
+        this.destroy();
     }
 });
 /*--------------------------------ESCENAS-------------------------------------*/
