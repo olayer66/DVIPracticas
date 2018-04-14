@@ -2,6 +2,7 @@
 var SPRITE_PLAYER = 1;
 var SPRITE_TILES = 2;
 var SPRITE_ENEMY = 4;
+var SPRITE_FLAG = 8;
 /* global Quintus */
 var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
                 .include("Sprites, Scenes, Input, 2D, Anim, Touch, UI,TMX,Audio")//Librerias del quintus cargadas
@@ -21,7 +22,7 @@ Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","mainTitle.
 //JSON'S (falta crear el de piranha.png)
 Q.preload(["mario_small.json","coin.json","bloopa.json","goomba.json"]);
 //Musica
-Q.preload(["music_main.ogg","jump_small.ogg","kill_enemy.ogg","music_die.ogg"]);
+Q.preload(["music_main.ogg","jump_small.ogg","kill_enemy.ogg","music_die.ogg","hit_head.ogg","coin.ogg"]);
 //Funcion de inicio
 
 Q.preload(function(){
@@ -46,7 +47,7 @@ Q.animations('Mario', {
   fall_right: { frames: [2], loop: false },
   fall_left: { frames: [14], loop: false }
 });
-/*-----------------------------ENEMIGOS----------------------------------*/
+/*--------------------------------ENEMIGOS------------------------------------*/
 
 
 Q.Sprite.extend("Bloopa",{ 
@@ -95,10 +96,18 @@ Q.Sprite.extend("Piranha",{
     }
 });
 
-
-/*--------------------------------JUGADOR-------------------------------------*/var salto=false;
+/*--------------------------------OTROS---------------------------------------*/
+Q.Sprite.extend("Flag",{ 
+    init: function(p) { 
+        this._super(p, { 
+            asset: "bloopa",
+            type: SPRITE_FLAG,
+            collisionMask: SPRITE_FLAG 
+        }); 
+    }
+});
+/*-------------------------------JUGADOR--------------------------------------*/
 var salto=false;
-var blqSalto=false;
 Q.Sprite.extend("Mario",{
     init:function(p) {
         this._super(p, {
@@ -132,6 +141,15 @@ Q.Sprite.extend("Mario",{
     stompT:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
+        else if(collision.obj.isA("TileLayer")) {
+            if(collision.tile === 37) { //caja llena
+                collision.obj.setTile(collision.tileX,collision.tileY, 24); 
+                Q.audio.play('hit_head.ogg');
+                Q.audio.play('coin.ogg');
+            }else if(collision.tile === 24 ||collision.tile === 44) { //Caja vacia
+                Q.audio.play('hit_head.ogg');
+            }
+        }
     },
     step:function(){
         if(Q.inputs['up'] && salto===false) {//salto
@@ -173,10 +191,10 @@ Q.scene("level1",function(stage) {
     Q.stageTMX("level.tmx",stage);
     //Q.audio.play('music_main.ogg',{ loop:true});
     stage.insert(mario);
-    stage.insert(b);
+    //stage.insert(b);
     stage.add("viewport").follow(mario,{x:true,y:false});
     stage.viewport.offsetX=150;
-    stage.insert(a);
+    //stage.insert(a);
     //stage.insert(c);
     
 });
