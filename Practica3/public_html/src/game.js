@@ -18,11 +18,11 @@ var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
                 .enableSound();//Habilita el uso de audio
 //*-------------------------CARGA DE CONTENIDO--------------------------------*/
 //Imagenes
-Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","mainTitle.png","mario_small.png","piranha.png","princess.png"]);
+Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","mainTitle.png","mario_small.png","piranha.png","princess.png","flag.png"]);
 //JSON'S (falta crear el de piranha.png)
 Q.preload(["mario_small.json","coin.json","bloopa.json","goomba.json"]);
 //Musica
-Q.preload(["music_main.ogg","jump_small.ogg","kill_enemy.ogg","music_die.ogg","hit_head.ogg","coin.ogg"]);
+Q.preload(["music_main.ogg","jump_small.ogg","kill_enemy.ogg","music_die.ogg","hit_head.ogg","coin.ogg","music_level_complete.ogg"]);
 //Funcion de inicio
 
 Q.preload(function(){
@@ -100,7 +100,7 @@ Q.Sprite.extend("Piranha",{
 Q.Sprite.extend("Flag",{ 
     init: function(p) { 
         this._super(p, { 
-            asset: "bloopa",
+            asset: "flag.png",
             type: SPRITE_FLAG,
             collisionMask: SPRITE_FLAG 
         }); 
@@ -123,39 +123,37 @@ Q.Sprite.extend("Mario",{
         this.on("bump.top",this,"stompT");
     },stompB:function(collision) {
         salto=false;
-        Q.audio.stop("jump_small.ogg");
         if(collision.obj.p.type===SPRITE_ENEMY) {
            collision.obj.destroy();        
            Q.audio.play('kill_enemy.ogg');
            this.p.vy = -300;// make the player jump
         }
+        else if(collision.obj.isA("TileLayer"))
+            this.colMapa(collision,"");
     },
     stompR:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
-            this.muerte();    
+            this.muerte();
+        else if(collision.obj.isA("TileLayer"))
+            this.colMapa(collision,"");
     },
     stompL:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
+        else if(collision.obj.isA("TileLayer"))
+            this.colMapa(collision,"");
     },
     stompT:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
-        else if(collision.obj.isA("TileLayer")) {
-            if(collision.tile === 37) { //caja llena
-                collision.obj.setTile(collision.tileX,collision.tileY, 24); 
-                Q.audio.play('hit_head.ogg');
-                Q.audio.play('coin.ogg');
-            }else if(collision.tile === 24 ||collision.tile === 44) { //Caja vacia
-                Q.audio.play('hit_head.ogg');
-            }
-        }
+        else if(collision.obj.isA("TileLayer"))
+            this.colMapa(collision,"top");
     },
     step:function(){
         if(Q.inputs['up'] && salto===false) {//salto
             this.p.gravity=0.4;
             salto=true;
-            Q.audio.play('jump_small.ogg');
+            Q.audio.play('jump_small.ogg',{debounce:500});
         }
         
         if(this.p.vx > 0) {
@@ -174,23 +172,50 @@ Q.Sprite.extend("Mario",{
             this.muerte();
     },
     muerte:function(){
+        Q.audio.stop("music_main.ogg");
         Q.audio.play('music_die.ogg');
         this.destroy();
         Q.loadTMX("endGame.tmx", function() {
         Q.stageScene("loseScreen");
     });
+    },
+    colMapa:function(collision,tipo){
+        if(collision.tile === 37 && tipo==="top") { //caja llena
+                collision.obj.setTile(collision.tileX,collision.tileY, 24); 
+                Q.audio.play('hit_head.ogg');
+                Q.audio.play('coin.ogg');
+        }else if(collision.tile === 24 ||collision.tile === 44 && tipo==="top") { //Caja vacia
+            Q.audio.play('hit_head.ogg');
+        }
+        else if(collision.tile === 38 ||collision.tile === 45) { //Mastil de la bandera     
+            collision.obj.setTile(collision.tileX,collision.tileY, 0);
+            this.movFin(collision);
+            
+        }
+        else if(collision.tile === 39) { //puerta castillo fin
+            //pantalla fin
+        }
+    },
+    movFin:function(collision){
+        Q.audio.stop("music_main.ogg");
+        Q.audio.play('music_level_complete.ogg',{debounce:10000});
+        this.p.vx=80;
+        this.del("platformerControls");
+        this.add("aiBounce");
     }
 });
 /*--------------------------------ESCENAS-------------------------------------*/
 //Nivel de testing
 Q.scene("level1",function(stage) {
-    var mario= new Q.Mario({x:630,y:400});
+    var mario= new Q.Mario({x:630,y:400});//x:3200//parte final mapa
+    var flag = new Q.Flag({x:3468,y:322});
     var b= new Q.Bloopa({x:730,y:400});
     var a= new Q.Goomba({x:780,y:450});
     var c = new Q.Piranha();
     Q.stageTMX("level.tmx",stage);
-    //Q.audio.play('music_main.ogg',{ loop:true});
+    Q.audio.play('music_main.ogg',{ loop:true});
     stage.insert(mario);
+    stage.insert(flag);
     //stage.insert(b);
     stage.add("viewport").follow(mario,{x:true,y:false});
     stage.viewport.offsetX=150;
@@ -201,7 +226,6 @@ Q.scene("level1",function(stage) {
 
 Q.scene("loseScreen",function(stage){
     Q.stageTMX("endGame.tmx",stage);
-    //stage.viewport.offsetX=150;
     stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: "Game Over!" }));
 });
 /*---------------------------------PRUEBAS------------------------------------*/
