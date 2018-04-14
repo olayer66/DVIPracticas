@@ -119,8 +119,8 @@ Q.Sprite.extend("Mario",{
     },
     muerte:function(){
         Q.audio.play('music_die.ogg');
-        
-        this.destroy();
+        Q.stage().collision=false;
+        //this.destroy();
     }
 });
 /*--------------------------------ESCENAS-------------------------------------*/
@@ -138,6 +138,10 @@ Q.scene("level1",function(stage) {
     stage.viewport.offsetX=150;
     //stage.insert(a);
     //stage.insert(c);
+    
+});
+
+Q.scene("loseScreen",function(){
     
 });
 /*---------------------------------PRUEBAS------------------------------------*/
