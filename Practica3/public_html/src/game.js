@@ -37,9 +37,10 @@ Q.Sprite.extend("Bloopa",{
     init: function(p) { 
         this._super(p, { 
             sheet: "bloopa",
-            frame: 0
+            frame: 0,
+            vx:100
         }); 
-        this.add("2d");
+        this.add("2d,aiBounce");
     }
 }); 
 
@@ -51,9 +52,10 @@ Q.Sprite.extend("Goomba",{
             x: 5, 
             y: 1,
             sheet: "goomba",
-            frame: 0
+            frame: 0,
+            vx:100
         }); 
-        this.add("2d");        
+        this.add("2d,aiBounce");        
     }
 }); 
 
@@ -65,9 +67,10 @@ Q.Sprite.extend("Piranha",{
             x: 5, 
             y: 1,
             sheet: "piranha",
-            frame: 0
+            frame: 0,
+            vy:100
         }); 
-        this.add("2d");        
+        this.add("2d,aiBounce");        
     }
 });
 
@@ -96,16 +99,22 @@ Q.Sprite.extend("Mario",{
         }
     },
     stompR:function(collision) {
-        if(collision.obj.isA("Bloopa")) 
+        if(collision.obj.isA("Bloopa")) {
+            collision.obj.destroy();
             this.muerte();
+        }     
     },
     stompL:function(collision) {
-        if(collision.obj.isA("Bloopa")) 
+        if(collision.obj.isA("Bloopa")) {
+            collision.obj.destroy();
             this.muerte();
+        } 
     },
     stompT:function(collision) {
-        if(collision.obj.isA("Bloopa")) 
+        if(collision.obj.isA("Bloopa")) {
+            collision.obj.destroy();
             this.muerte();
+        } 
     },
     step:function(){
         if(Q.inputs['up'] && salto===false) {//salto
@@ -116,11 +125,15 @@ Q.Sprite.extend("Mario",{
         if(!Q.inputs['up']){
             this.p.gravity=1;
         }
+        if(this.p.y>600)
+            this.muerte();
     },
     muerte:function(){
         Q.audio.play('music_die.ogg');
-        Q.stage().collision=false;
-        //this.destroy();
+        this.destroy();
+        Q.loadTMX("endGame.tmx", function() {
+        Q.stageScene("loseScreen");
+    });
     }
 });
 /*--------------------------------ESCENAS-------------------------------------*/
@@ -141,7 +154,9 @@ Q.scene("level1",function(stage) {
     
 });
 
-Q.scene("loseScreen",function(){
-    
+Q.scene("loseScreen",function(stage){
+    Q.stageTMX("endGame.tmx",stage);
+    //stage.viewport.offsetX=150;
+    stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: "Game Over!" }));
 });
 /*---------------------------------PRUEBAS------------------------------------*/
