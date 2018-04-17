@@ -119,24 +119,32 @@ Q.Sprite.extend("Coin",{
         this._super(p,{
             sheet: "coin",
             frame: 0,
+            gravity:0,
+            vy:0,
             type: SPRITE_COIN,
             collisionMask: SPRITE_PLAYER
-        });      
+        });
+        this.add("2d");
     }
 });
 //Sensor de posicion
 Q.Sprite.extend("Sensor",{
     init:function(p){
         this._super(p,{
-            sheet: "coin",
-            frame: 0,
+            asset:"empty.png",
             //Posiciones del punto de destino
             destX:0,
             destY:0,
-            type: SPRITE_SENSOR,
-            collisionMask: SPRITE_PLAYER
-        });      
-    }
+            hidden:false,
+            type: SPRITE_SENSOR
+        }); 
+        this.add("2d");
+        this.on("bump.bottom",this,"stomp");
+        this.p.gravity=0;
+    },
+    stomp: function(collision) {
+      this.p.vy = 0; // make the player jump
+  }
 });
 /*-------------------------------JUGADOR--------------------------------------*/
 var salto=false;
@@ -160,17 +168,19 @@ Q.Sprite.extend("Mario",{
            collision.obj.destroy();        
            Q.audio.play('kill_enemy.ogg');
            this.p.vy = -300;// make the player jump
-        }else if(collision.obj.p.type===SPRITE_SENSOR){
-            this.goDown(collision.obj.p.destX,collision.obj.p.destY);
-        }
+        }else if(collision.obj.p.type===SPRITE_COIN){
+            Q.audio.play('coin.ogg');
+            collision.obj.destroy();
+        } 
         else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Down");
     },
     stompR:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
-        else if(collision.obj.p.type===SPRITE_SENSOR){
-            this.goDown(collision.obj.p.destX,collision.obj.p.destY);
+        else if(collision.obj.p.type===SPRITE_COIN){
+            Q.audio.play('coin.ogg');
+            collision.obj.destroy();
         }else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Right");
         
@@ -178,8 +188,9 @@ Q.Sprite.extend("Mario",{
     stompL:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
-        else if(collision.obj.p.type===SPRITE_SENSOR){
-            this.goDown(collision.obj.p.destX,collision.obj.p.destY);
+        else if(collision.obj.p.type===SPRITE_COIN){
+            Q.audio.play('coin.ogg');
+            collision.obj.destroy();
         } 
         else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Left");
@@ -187,6 +198,10 @@ Q.Sprite.extend("Mario",{
     stompT:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
+        else if(collision.obj.p.type===SPRITE_COIN){
+            Q.audio.play('coin.ogg');
+            collision.obj.destroy();
+        } 
         else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"top");
     },
@@ -276,10 +291,18 @@ Q.Sprite.extend("Mario",{
             Q.loadTMX("nextLevel.tmx", function() {
                 Q.stageScene("winScreen");
             });
-        }else if(collision.tile === 3 || collision.tile === 17 && tipo==="Down"){//Boca tuberia vertical
-            
-        }else if(collision.tile === 5 || collision.tile === 12 && tipo==="Down"){//Boca tuberia horizontal
-            
+        }else if((collision.tile === 49 || collision.tile === 50) && tipo==="Down" && abajo){//Boca tuberia vertical
+            var bandera=Q("Sensor");
+            var that=this;
+            bandera.each(function() {
+                that.goDown(this.p.destX,this.p.destY);
+            });
+        }else if(collision.tile === 5 || collision.tile === 12 && tipo==="Right"){//Boca tuberia horizontal
+            var bandera=Q("Sensor");
+            var that=this;
+            bandera.each(function() {
+                that.goDown(this.p.x,this.p.y);
+            });
         }
     },
     movFin:function(collision){
@@ -302,20 +325,61 @@ Q.scene("level1",function(stage) {
      * y= (numTileY*TamTile) + [tamTile/2]
      * x= (numTileX*TamTile) + [tamTile/2]
      */
-    var mario= new Q.Mario({x:(18*34)-17,y:15*34,limInfMapa:17*34});
+    var mario= new Q.Mario({x:(136*34)-17,y:11*34,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
                 //Bandera final
                 ["Flag", {x:102*34, y: (10*34)-15}],
                 //Enemigos
-                ["Bloopa", {x: 25*34, y: 15*34}],
-                ["Goomba", {x: 27*34, y: 15*34}],
+                //["Bloopa", {x: 25*34, y: 15*34}],
+                //["Goomba", {x: 27*34, y: 15*34}],
                 //Sensor de la tuberia a la cueva
-                ["Sensor", {x: 56*34, y: (15*34)-17,destX:(136*34)-17,destY:11*34}],
-                //Sensor de la tuberia salida de la cueva
-                ["Sensor", {x: 27*34, y: 15*34,destX:56*34,destY:16*34}],
-                //Cueva del tesoro(2 grupos x 3 altura x 6 monedas/fila)(inicio en 132,9)
-                ["Coin", {x: (139*34)+17, y: (8*34)+17}] 
+                ["Sensor", {x: (56*34), y: (15*34),destX:(136*34)-17,destY:11*34}],
+                //Cueva del tesoro(2 grupos x 3 altura x 6 monedas/fila)(inicio en 139,6)
+                //Grupo arriba
+                //fila 1
+                ["Coin", {x: (139*34)+17, y: (8*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (8*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (8*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (8*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (8*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (8*34)+17}],
+                //fila 2
+                ["Coin", {x: (139*34)+17, y: (9*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (9*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (9*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (9*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (9*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (9*34)+17}],
+                //fila 3
+                ["Coin", {x: (139*34)+17, y: (10*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (10*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (10*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (10*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (10*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (10*34)+17}],
+                //Grupo abajo
+                //fila 1
+                ["Coin", {x: (139*34)+17, y: (12*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (12*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (12*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (12*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (12*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (12*34)+17}],
+                //fila 2
+                ["Coin", {x: (139*34)+17, y: (13*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (13*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (13*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (13*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (13*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (13*34)+17}],
+                //fila 3
+                ["Coin", {x: (139*34)+17, y: (14*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (14*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (14*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (14*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (14*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (14*34)+17}]      
             ];
     //Cargamos el mapa
     Q.stageTMX("level.tmx",stage);
