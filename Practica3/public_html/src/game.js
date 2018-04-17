@@ -4,6 +4,7 @@ var SPRITE_TILES = 2;
 var SPRITE_ENEMY = 4;
 var SPRITE_FLAG = 8;
 var SPRITE_COIN = 16;
+var SPRITE_SENSOR = 32;
 /* global Quintus */
 var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
                 .include("Sprites, Scenes, Input, 2D, Anim, Touch, UI,TMX,Audio")//Librerias del quintus cargadas
@@ -23,7 +24,7 @@ Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","mainTitle.
 //JSON'S (falta crear el de piranha.png)
 Q.preload(["mario_small.json","coin.json","bloopa.json","goomba.json"]);
 //Musica
-Q.preload(["music_main.ogg","jump_small.ogg","kill_enemy.ogg","music_die.ogg","hit_head.ogg","coin.ogg","music_level_complete.ogg","pause.ogg"]);
+Q.preload(["music_main.ogg","jump_small.ogg","kill_enemy.ogg","music_die.ogg","hit_head.ogg","coin.ogg","music_level_complete.ogg","pause.ogg","down_pipe.ogg"]);
 //Funcion de inicio
 
 Q.preload(function(){
@@ -104,7 +105,7 @@ Q.Sprite.extend("Flag",{
             asset: "flag.png",
             type: SPRITE_FLAG,
             goDown:false,
-            collisionMask: SPRITE_PLAYER 
+            collisionMask: SPRITE_PLAYER
         });
     },
     step:function(){
@@ -119,12 +120,27 @@ Q.Sprite.extend("Coin",{
             sheet: "coin",
             frame: 0,
             type: SPRITE_COIN,
-            collisionMask: SPRITE_PLAYER | SPRITE_TILES
+            collisionMask: SPRITE_PLAYER
+        });      
+    }
+});
+//Sensor de posicion
+Q.Sprite.extend("Sensor",{
+    init:function(p){
+        this._super(p,{
+            sheet: "coin",
+            frame: 0,
+            //Posiciones del punto de destino
+            destX:0,
+            destY:0,
+            type: SPRITE_SENSOR,
+            collisionMask: SPRITE_PLAYER
         });      
     }
 });
 /*-------------------------------JUGADOR--------------------------------------*/
 var salto=false;
+var abajo=false;
 Q.Sprite.extend("Mario",{
     init:function(p) {
         this._super(p, {
@@ -132,7 +148,7 @@ Q.Sprite.extend("Mario",{
             sprite:"Mario",
             frame:0,
             lifes:1,
-            limInfMapa:23*34
+            type:SPRITE_PLAYER
         });
         this.add("2d,platformerControls,animation");
         this.on("bump.bottom",this,"stompB");
@@ -140,11 +156,12 @@ Q.Sprite.extend("Mario",{
         this.on("bump.left",this,"stompL");
         this.on("bump.top",this,"stompT");
     },stompB:function(collision) {
-        salto=false;
         if(collision.obj.p.type===SPRITE_ENEMY) {
            collision.obj.destroy();        
            Q.audio.play('kill_enemy.ogg');
            this.p.vy = -300;// make the player jump
+        }else if(collision.obj.p.type===SPRITE_SENSOR){
+            this.goDown(collision.obj.p.destX,collision.obj.p.destY);
         }
         else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Down");
@@ -152,12 +169,18 @@ Q.Sprite.extend("Mario",{
     stompR:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
-        else if(collision.obj.isA("TileLayer"))
+        else if(collision.obj.p.type===SPRITE_SENSOR){
+            this.goDown(collision.obj.p.destX,collision.obj.p.destY);
+        }else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Right");
+        
     },
     stompL:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
+        else if(collision.obj.p.type===SPRITE_SENSOR){
+            this.goDown(collision.obj.p.destX,collision.obj.p.destY);
+        } 
         else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Left");
     },
@@ -175,7 +198,15 @@ Q.Sprite.extend("Mario",{
             Q.audio.play('jump_small.ogg',{debounce:500});
         }
         if(!Q.inputs['up']){
+            salto=false;
             this.p.gravity=1;
+        }
+        //Agacharse
+        if(Q.inputs['down'] && abajo===false) {
+            abajo=true;
+        }
+        if(!Q.inputs['down']){
+            abajo=false;
         }
         //Parada del juego
         if(Q.inputs['action']){
@@ -227,7 +258,7 @@ Q.Sprite.extend("Mario",{
         }else if((collision.tile === 24 ||collision.tile === 44) && tipo==="top") { //Caja vacia
             Q.audio.play('hit_head.ogg');
         }else if(collision.tile === 38 ||collision.tile === 45) { //Mastil de la bandera     
-            //Eliminamos la colsion contra el mastil (tile = 0 es empty)
+            //Eliminamos la colision contra el mastil (tile = 0 es empty)
             collision.obj.setTile(collision.tileX,14, 0);
             collision.obj.setTile(collision.tileX,13, 0);
             collision.obj.setTile(collision.tileX,12, 0);
@@ -257,13 +288,21 @@ Q.Sprite.extend("Mario",{
         this.p.vx=50;
         this.del("platformerControls");
         this.add("aiBounce");
+    },
+    goDown:function(destX,destY){
+        Q.audio.play('down_pipe.ogg',{debounce:100});
+        this.p.x=destX;
+        this.p.y=destY;
     }
 });
 /*--------------------------------ESCENAS-------------------------------------*/
 //Nivel de testing
 Q.scene("level1",function(stage) {
-    //Posicion de un sprite (para x e y) = (numTile*TamTile) - [tamTile/2]
-    var mario= new Q.Mario({x:(18*34)-17,y:15*34});
+    /*Posicion de un sprite
+     * y= (numTileY*TamTile) + [tamTile/2]
+     * x= (numTileX*TamTile) + [tamTile/2]
+     */
+    var mario= new Q.Mario({x:(18*34)-17,y:15*34,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
                 //Bandera final
@@ -271,19 +310,22 @@ Q.scene("level1",function(stage) {
                 //Enemigos
                 ["Bloopa", {x: 25*34, y: 15*34}],
                 ["Goomba", {x: 27*34, y: 15*34}],
+                //Sensor de la tuberia a la cueva
+                ["Sensor", {x: 56*34, y: (15*34)-17,destX:(136*34)-17,destY:11*34}],
+                //Sensor de la tuberia salida de la cueva
+                ["Sensor", {x: 27*34, y: 15*34,destX:56*34,destY:16*34}],
                 //Cueva del tesoro(2 grupos x 3 altura x 6 monedas/fila)(inicio en 132,9)
                 ["Coin", {x: (139*34)+17, y: (8*34)+17}] 
             ];
     //Cargamos el mapa
     Q.stageTMX("level.tmx",stage);
     //Cargamos la musica principal
-    Q.audio.play('music_main.ogg',{ loop:true});
+    //Q.audio.play('music_main.ogg',{ loop:true});
     //Insertamos todos los sprites del nivel
     stage.loadAssets(levelAssets); 
     //Insertamos a mario
     stage.insert(mario);
-    stage.add("viewport").follow(mario,{x:true,y:true});
-    stage.viewport.offsetX=150;
+    stage.add("viewport").follow(mario,{x:true,y:false});
 });
 //Pantalla de perdido
 Q.scene("loseScreen",function(stage){
@@ -295,10 +337,11 @@ Q.scene("winScreen",function(stage){
     Q.stageTMX("nextLevel.tmx",stage);
     stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: "Has ganado!" }));
 });
+//Mensaje de juego pausado
 Q.scene('pauseMessage',function(stage) {
   var container = stage.insert(new Q.UI.Container({x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"}));
   var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",label:"Reanudar" }));         
-  var label = container.insert(new Q.UI.Text({x:10, y: -10 - button.p.h,color:"#ffffff",label:"Juego pausado"}));
+  var label = container.insert(new Q.UI.Text({x:0, y: -10 - button.p.h,color:"#ffffff",label:"Juego pausado"}));
 
   button.on("click",function() {
      Q.audio.play('music_main.ogg',{ loop:true});
