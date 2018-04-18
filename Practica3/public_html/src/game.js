@@ -53,6 +53,12 @@ Q.animations('Mario', {
   jump_right: { frames: [3,4,5,6], rate: 1/2,loop: false},
   jump_left: { frames: [18,19,20,21], rate: 1/2,loop: false}
 });
+
+Q.animations('Bloopa', {
+    bloopa: { frames: [0], rate: 1 },
+    bloopaDie: { frames: [0,1,2], rate: 1/5}
+  });
+
 /*--------------------------------ENEMIGOS------------------------------------*/
 
 
@@ -60,12 +66,29 @@ Q.Sprite.extend("Bloopa",{
     init: function(p) { 
         this._super(p, { 
             sheet: "bloopa",
+            sprite:"Bloopa",
             frame: 0,
             vx:100,
+            die: false,
+            muerteCont: 0,
             type: SPRITE_ENEMY,
             collisionMask: SPRITE_PLAYER | SPRITE_TILES
         }); 
         this.add("2d,aiBounce");
+        this.add("2d,aiBounce,animation");
+    },
+    muerte:function() {
+      this.play("bloopaDie");
+      this.die=true;
+      this.muerteCont=0;
+      this.vx=0;
+      this.del("aiBounce");
+    },
+    step:function(){
+        if(this.die) 
+            this.muerteCont++;
+        if(this.muerteCont===150)
+            this.destroy();
     }
 }); 
 
@@ -166,7 +189,7 @@ Q.Sprite.extend("Mario",{
         this.on("bump.top",this,"stompT");
     },stompB:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) {
-           collision.obj.destroy();        
+            collision.obj.muerte();       
            Q.audio.play('kill_enemy.ogg');
            this.p.vy = -300;// make the player jump
         }else if(collision.obj.p.type===SPRITE_COIN){
@@ -369,6 +392,7 @@ Q.scene("level1",function(stage) {
                 ["Flag", {x:102*34, y: (10*34)-15}],
                 //Enemigos
                 //["Bloopa", {x: 25*34, y: 15*34}],
+                ["Bloopa", {x: 25*34, y: 15*34}],
                 //["Goomba", {x: 27*34, y: 15*34}],
                 //Sensor de la tuberia a la cueva
                 ["Sensor", {x: (56*34), y: (15*34),destX:(136*34)-17,destY:11*34}],
