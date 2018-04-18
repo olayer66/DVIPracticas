@@ -82,12 +82,14 @@ Q.Sprite.extend("Bloopa",{
       this.die=true;
       this.muerteCont=0;
       this.vx=0;
+      this.p.vx=0;
       this.del("aiBounce");
+      this.p.type=SPRITE_TILES; //asi si toca  amrio no perdemos.
     },
     step:function(){
         if(this.die) 
             this.muerteCont++;
-        if(this.muerteCont===150)
+        if(this.muerteCont===25)
             this.destroy();
     }
 }); 
@@ -189,7 +191,8 @@ Q.Sprite.extend("Mario",{
         this.on("bump.top",this,"stompT");
     },stompB:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) {
-            collision.obj.muerte();       
+            collision.obj.p.x=this.p.x;
+            collision.obj.muerte();
            Q.audio.play('kill_enemy.ogg');
            this.p.vy = -300;// make the player jump
         }else if(collision.obj.p.type===SPRITE_COIN){
