@@ -147,8 +147,6 @@ Q.Sprite.extend("Sensor",{
   }
 });
 /*-------------------------------JUGADOR--------------------------------------*/
-var salto=false;
-var abajo=false;
 Q.Sprite.extend("Mario",{
     init:function(p) {
         this._super(p, {
@@ -156,6 +154,9 @@ Q.Sprite.extend("Mario",{
             sprite:"Mario",
             frame:0,
             lifes:1,
+            suelo:true,
+            agachado:false,
+            bandera:false,
             type:SPRITE_PLAYER
         });
         this.add("2d,platformerControls,animation");
@@ -172,8 +173,10 @@ Q.Sprite.extend("Mario",{
             Q.audio.play('coin.ogg');
             collision.obj.destroy();
         } 
-        else if(collision.obj.isA("TileLayer"))
+        else if(collision.obj.isA("TileLayer")){
+            this.p.suelo=true;
             this.colMapa(collision,"Down");
+        }
     },
     stompR:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
@@ -207,21 +210,22 @@ Q.Sprite.extend("Mario",{
     },
     step:function(){
         //salto
-        if(Q.inputs['up'] && salto===false) {
-            this.p.gravity=0.4;
-            salto=true;
-            Q.audio.play('jump_small.ogg',{debounce:500});
+        if(this.p.suelo){
+            if(Q.inputs['up']) {
+                this.p.gravity=0.4;
+                this.p.suelo=false;
+                Q.audio.play('jump_small.ogg',{debounce:500});
+            } 
         }
         if(!Q.inputs['up']){
-            salto=false;
             this.p.gravity=1;
         }
         //Agacharse
-        if(Q.inputs['down'] && abajo===false) {
-            abajo=true;
+        if(Q.inputs['down'] && !this.p.agachado) {
+            this.p.agachado=true;
         }
         if(!Q.inputs['down']){
-            abajo=false;
+            this.p.agachado=false;
         }
         //Parada del juego
         if(Q.inputs['action']){
@@ -232,12 +236,12 @@ Q.Sprite.extend("Mario",{
         }
         //animacion movimiento
         if(this.p.vx > 0) {
-            if(salto===false)
+            if(this.p.suelo===true)
                 this.play("run_right");
             else
                 this.play("jump_right");
         } else if(this.p.vx < 0) {
-            if(salto===false)
+            if(this.p.suelo===true)
                 this.play("run_left");
             else
                 this.play("jump_left");
@@ -281,17 +285,18 @@ Q.Sprite.extend("Mario",{
             collision.obj.setTile(collision.tileX,10, 0);
             collision.obj.setTile(collision.tileX,9, 0);
             collision.obj.setTile(collision.tileX,8, 0);
+            this.p.bandera=true;
             var bandera=Q("Flag");
             bandera.each(function() {
                 this.p.goDown=true;
             });
             this.movFin(collision);
             
-        }else if(collision.tile === 39) { //puerta castillo fin
+        }else if(collision.tile === 39 && this.p.bandera) { //puerta castillo fin
             Q.loadTMX("nextLevel.tmx", function() {
                 Q.stageScene("winScreen");
             });
-        }else if((collision.tile === 49 || collision.tile === 50) && tipo==="Down" && abajo){//Boca tuberia vertical
+        }else if((collision.tile === 49 || collision.tile === 50) && tipo==="Down" && this.p.agachado){//Boca tuberia vertical
             var bandera=Q("Sensor");
             var that=this;
             bandera.each(function() {
@@ -318,14 +323,46 @@ Q.Sprite.extend("Mario",{
         this.p.y=destY;
     }
 });
-/*--------------------------------ESCENAS-------------------------------------*/
+/*------------------------------ESCENAS BASE----------------------------------*/
+//Pantalla de inicio
+Q.scene("initScreen",function(stage){
+    Q.stageTMX("nextLevel.tmx",stage);
+    stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: "Pulsa una tecla para empezar" }));
+});
+//Pantalla de perdido
+Q.scene("loseScreen",function(stage){
+    Q.stageTMX("endGame.tmx",stage);
+    stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: "Game Over!" }));
+});
+//Pantalla de ganado
+Q.scene("winScreen",function(stage){
+    Q.stageTMX("nextLevel.tmx",stage);
+    stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: "Has ganado!" }));
+});
+//Mensaje de juego pausado
+Q.scene('pauseMessage',function(stage) {
+  var container = stage.insert(new Q.UI.Container({x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"}));
+  var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",label:"Reanudar" }));         
+  var label = container.insert(new Q.UI.Text({x:0, y: -10 - button.p.h,color:"#ffffff",label:"Juego pausado"}));
+
+  button.on("click",function() {
+     Q.audio.play('music_main.ogg',{ loop:true});
+     Q.stage().unpause();
+     Q.clearStage(2);
+  });
+  // Expand the container to visibily fit it's contents
+  // (with a padding of 20 pixels)
+  container.fit(20);
+});
+
+/*----------------------------------NIVELES-----------------------------------*/
 //Nivel de testing
 Q.scene("level1",function(stage) {
     /*Posicion de un sprite
      * y= (numTileY*TamTile) + [tamTile/2]
      * x= (numTileX*TamTile) + [tamTile/2]
      */
-    var mario= new Q.Mario({x:(136*34)-17,y:11*34,limInfMapa:17*34});
+    var mario= new Q.Mario({x:(19*34)-17,y:15*34,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
                 //Bandera final
@@ -390,30 +427,5 @@ Q.scene("level1",function(stage) {
     //Insertamos a mario
     stage.insert(mario);
     stage.add("viewport").follow(mario,{x:true,y:false});
-});
-//Pantalla de perdido
-Q.scene("loseScreen",function(stage){
-    Q.stageTMX("endGame.tmx",stage);
-    stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: "Game Over!" }));
-});
-//Pantalla de ganado
-Q.scene("winScreen",function(stage){
-    Q.stageTMX("nextLevel.tmx",stage);
-    stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: "Has ganado!" }));
-});
-//Mensaje de juego pausado
-Q.scene('pauseMessage',function(stage) {
-  var container = stage.insert(new Q.UI.Container({x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"}));
-  var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",label:"Reanudar" }));         
-  var label = container.insert(new Q.UI.Text({x:0, y: -10 - button.p.h,color:"#ffffff",label:"Juego pausado"}));
-
-  button.on("click",function() {
-     Q.audio.play('music_main.ogg',{ loop:true});
-     Q.stage().unpause();
-     Q.clearStage(2);
-  });
-  // Expand the container to visibily fit it's contents
-  // (with a padding of 20 pixels)
-  container.fit(20);
 });
 /*---------------------------------PRUEBAS------------------------------------*/
