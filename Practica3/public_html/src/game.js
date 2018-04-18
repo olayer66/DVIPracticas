@@ -20,7 +20,7 @@ var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
                 .enableSound();//Habilita el uso de audio
 //*-------------------------CARGA DE CONTENIDO--------------------------------*/
 //Imagenes
-Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","mainTitle.png","mario_small.png","piranha.png","princess.png","flag.png"]);
+Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","main_title.png","mario_small.png","piranha.png","princess.png","flag.png"]);
 //JSON'S (falta crear el de piranha.png)
 Q.preload(["mario_small.json","coin.json","bloopa.json","goomba.json"]);
 //Musica
@@ -34,8 +34,8 @@ Q.preload(function(){
     Q.compileSheets("goomba.png","goomba.json");
     Q.compileSheets("coin.png","coin.json");
     Q.state.set({ score: 50, lives: 1, pause:false });
-    Q.loadTMX("level.tmx", function() {
-    Q.stageScene("level1");
+    Q.loadTMX("mainMenu.tmx", function() {
+    Q.stageScene("initScreen");
     });
 });
 
@@ -349,8 +349,17 @@ Q.Sprite.extend("Mario",{
 /*------------------------------ESCENAS BASE----------------------------------*/
 //Pantalla de inicio
 Q.scene("initScreen",function(stage){
-    Q.stageTMX("nextLevel.tmx",stage);
-    stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: "Pulsa una tecla para empezar" }));
+    Q.stageTMX("mainMenu.tmx",stage);
+    stage.insert(new Q.UI.Text({x:Q.width/2, y: (Q.height/3)*2-100,size:32,color: "#ffffff",label: "Pulsa una tecla para empezar" }));
+    stage.insert(new Q.UI.Button({asset:"main_title.png",x:Q.width/2, y: (Q.height/3)}));
+    Q.audio.play('music_main.ogg',{ loop:true});
+    Q.input.on("action",this,function(){
+        Q.audio.stop('music_main.ogg');
+        Q.audio.play('coin.ogg');
+        Q.loadTMX("level.tmx", function() {
+            Q.stageScene("level1");
+        }); 
+    });
 });
 //Pantalla de perdido
 Q.scene("loseScreen",function(stage){
@@ -367,7 +376,7 @@ Q.scene('pauseMessage',function(stage) {
   var container = stage.insert(new Q.UI.Container({x: Q.width/2, y: Q.height/2, fill: "rgba(0,0,0,0.5)"}));
   var button = container.insert(new Q.UI.Button({ x: 0, y: 0, fill: "#CCCCCC",label:"Reanudar" }));         
   var label = container.insert(new Q.UI.Text({x:0, y: -10 - button.p.h,color:"#ffffff",label:"Juego pausado"}));
-
+  
   button.on("click",function() {
      Q.audio.play('music_main.ogg',{ loop:true});
      Q.stage().unpause();
