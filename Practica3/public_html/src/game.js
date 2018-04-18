@@ -29,13 +29,13 @@ Q.input.on("pausa",function() {
             Q.state.set("pause",false);
             Q.audio.play('music_main.ogg',{ loop:true});
             Q.stage().unpause();
-            Q.clearStage(2);
+            Q.clearStage(3);
         }else{
             Q.state.set("pause",true);
             Q.audio.stop();
             Q.audio.play('pause.ogg',{debounce:500});
             Q.stage().pause();
-            Q.stageScene("pauseMessage",2);
+            Q.stageScene("pauseMessage",3);
         }
     }
   });
@@ -53,7 +53,7 @@ Q.preload(function(){
     Q.compileSheets("bloopa.png","bloopa.json");
     Q.compileSheets("goomba.png","goomba.json");
     Q.compileSheets("coin.png","coin.json");
-    Q.state.set({ score: 50, lives: 1, pause:false,enJuego:false });
+    Q.state.set({ score: 0, lives: 1, pause:false,enJuego:false });
     Q.loadTMX("mainMenu.tmx", function() {
     Q.stageScene("initScreen");
     });
@@ -371,6 +371,25 @@ Q.Sprite.extend("Mario",{
         this.p.y=destY;
     }
 });
+/*----------------------------------HUD---------------------------------------*/
+//HUD
+Q.UI.Text.extend("Score",{
+    init:function(p) {
+        this._super({
+            label: "score: 0",    
+            x: 0,
+            y: 0
+            });
+        Q.state.on("change.score",this,"score");
+    },
+    score:function(score) {
+        this.p.label = "score: " + score;
+    }
+});
+Q.scene('HUD',function(stage) {
+  var container = stage.insert(new Q.UI.Container({x: Q.width, y: Q.height, fill: "rgba(0,0,0,0.5)"}));
+  container.insert(new Q.Score({x:400,y:400,size:32,color: "#ffffff"}));
+});
 /*------------------------------ESCENAS BASE----------------------------------*/
 //Pantalla de inicio
 Q.scene("initScreen",function(stage){
@@ -384,6 +403,7 @@ Q.scene("initScreen",function(stage){
         Q.audio.play('coin.ogg');
         Q.loadTMX("level.tmx", function() {
             Q.stageScene("level1");
+            Q.stageScene("HUD",2);
         }); 
     });
 });
@@ -405,12 +425,11 @@ Q.scene("winScreen",function(stage){
 //Mensaje de juego pausado
 Q.scene('pauseMessage',function(stage) {
   var container = stage.insert(new Q.UI.Container({x: Q.width/2, y: Q.height/2, fill: "rgba(66,66,66,0.5)"}));        
-  var label = container.insert(new Q.UI.Text({x:0, y: 10,color:"#ffffff",label:"Juego pausado"}));
+  container.insert(new Q.UI.Text({x:0, y: 10,color:"#ffffff",label:"Juego pausado"}));
   // Expand the container to visibily fit it's contents
   // (with a padding of 20 pixels)
   container.fit(20);
 });
-
 /*----------------------------------NIVELES-----------------------------------*/
 //Nivel de testing
 Q.scene("level1",function(stage) {
@@ -479,7 +498,7 @@ Q.scene("level1",function(stage) {
     //Cargamos el mapa
     Q.stageTMX("level.tmx",stage);
     //Insertamos todos los sprites del nivel
-    stage.loadAssets(levelAssets); 
+    stage.loadAssets(levelAssets);
     //Insertamos a mario
     stage.insert(mario);
     stage.add("viewport").follow(mario,{x:true,y:false});
