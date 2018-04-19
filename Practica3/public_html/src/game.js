@@ -23,6 +23,7 @@ var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
 Q.input.keyboardControls({
     P: "pausa"
 });
+//Modo de pausa del juego
 Q.input.on("pausa",function() {
     if(Q.state.get("enJuego")){
         if(Q.state.get("pause")) {
@@ -75,8 +76,8 @@ Q.animations('Mario', {
 });
 
 Q.animations('Bloopa', {
-    bloopa: { frames: [0], rate: 1 },
-    bloopaDie: { frames: [0,1,2], rate: 1/5}
+    bloopa: { frames: [0,1], rate: 1/2 },
+    bloopaDie: { frames: [0,1,2], rate: 1}
   });
 
 /*--------------------------------ENEMIGOS------------------------------------*/
@@ -94,7 +95,6 @@ Q.Sprite.extend("Bloopa",{
             type: SPRITE_ENEMY,
             collisionMask: SPRITE_PLAYER | SPRITE_TILES
         }); 
-        this.add("2d,aiBounce");
         this.add("2d,aiBounce,animation");
     },
     muerte:function() {
@@ -107,6 +107,7 @@ Q.Sprite.extend("Bloopa",{
       this.p.type=SPRITE_TILES; //asi si toca  amrio no perdemos.
     },
     step:function(){
+        this.play("bloopa");
         if(this.die) 
             this.muerteCont++;
         if(this.muerteCont===25)
@@ -278,10 +279,6 @@ Q.Sprite.extend("Mario",{
         if(!Q.inputs['down']){
             this.p.agachado=false;
         }
-        //Parada del juego
-        if(Q.inputs['pausa'] && !pausa){
-            
-        }
         //animacion movimiento
         if(this.p.vx > 0) {
             if(this.p.suelo===true)
@@ -387,8 +384,8 @@ Q.UI.Text.extend("Score",{
     }
 });
 Q.scene('HUD',function(stage) {
-  var container = stage.insert(new Q.UI.Container({x: Q.width, y: Q.height, fill: "rgba(0,0,0,0.5)"}));
-  container.insert(new Q.Score({x:400,y:400,size:32,color: "#ffffff"}));
+  var container = stage.insert(new Q.UI.Container({x:70, y:10, fill: "rgba(0,0,0,0.5)"}));
+  container.insert(new Q.Score({x:0,y:0,size:32,color: "#ffffff"}));
 });
 /*------------------------------ESCENAS BASE----------------------------------*/
 //Pantalla de inicio
@@ -398,13 +395,16 @@ Q.scene("initScreen",function(stage){
     stage.insert(new Q.UI.Text({x:Q.width/2, y: (Q.height/3)*2-80,size:32,color: "#ffffff",label: "Pulsa enter para empezar" }));
     stage.insert(new Q.UI.Button({asset:"main_title.png",x:Q.width/2, y: (Q.height/3)}));
     stage.insert(new Q.Mario({x:(3*34),y:13*34,limInfMapa:17*34,auto:true,vx:80}));
-    //Q.audio.play('music_main.ogg',{ loop:true});
+    //Musica principal del juego
+    Q.audio.play('music_main.ogg',{ loop:true});
     Q.input.on("confirm",this,function(){
-        Q.audio.play('coin.ogg');
-        Q.loadTMX("level.tmx", function() {
-            Q.stageScene("level1");
-            Q.stageScene("HUD",2);
-        }); 
+        if(!Q.state.get("enJuego")){
+            Q.audio.play('coin.ogg');
+            Q.loadTMX("level.tmx", function() {
+                Q.stageScene("level1");
+                Q.stageScene("HUD",2);
+            });
+        }
     });
 });
 //Pantalla de perdido
@@ -443,8 +443,7 @@ Q.scene("level1",function(stage) {
                 //Bandera final
                 ["Flag", {x:102*34, y: (10*34)-15}],
                 //Enemigos
-                //["Bloopa", {x: 25*34, y: 15*34}],
-                ["Bloopa", {x: 25*34, y: 15*34}],
+                ["Bloopa", {x: 24*34, y: (15*34)}],
                 //["Goomba", {x: 27*34, y: 15*34}],
                 //Sensor de la tuberia a la cueva
                 ["Sensor", {x: (56*34), y: (15*34),destX:(136*34)-17,destY:11*34}],
