@@ -54,7 +54,7 @@ Q.preload(function(){
     Q.compileSheets("bloopa.png","bloopa.json");
     Q.compileSheets("goomba.png","goomba.json");
     Q.compileSheets("coin.png","coin.json");
-    Q.state.set({ score: 0, lives: 1, pause:false,enJuego:false });
+    Q.state.set({ score: 0, lives: 1, pause:false,enJuego:false,valCoin:10,valEnemy:100 });
     Q.loadTMX("mainMenu.tmx", function() {
     Q.stageScene("initScreen");
     });
@@ -171,6 +171,11 @@ Q.Sprite.extend("Coin",{
             collisionMask: SPRITE_PLAYER
         });
         this.add("2d");
+    },
+    cojer: function(){
+        Q.audio.play('kill_enemy.ogg');
+        Q.state.inc("score",Q.state.get("valCoin"));
+        this.destroy();
     }
 });
 //Sensor de posicion
@@ -222,8 +227,7 @@ Q.Sprite.extend("Mario",{
            Q.audio.play('kill_enemy.ogg');
            this.p.vy = -300;// make the player jump
         }else if(collision.obj.p.type===SPRITE_COIN){
-            Q.audio.play('coin.ogg');
-            collision.obj.destroy();
+            collision.obj.cojer();
         } 
         else if(collision.obj.isA("TileLayer")){
             this.p.suelo=true;
@@ -234,8 +238,7 @@ Q.Sprite.extend("Mario",{
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
         else if(collision.obj.p.type===SPRITE_COIN){
-            Q.audio.play('coin.ogg');
-            collision.obj.destroy();
+            collision.obj.cojer();
         }else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Right");
         
@@ -244,8 +247,7 @@ Q.Sprite.extend("Mario",{
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
         else if(collision.obj.p.type===SPRITE_COIN){
-            Q.audio.play('coin.ogg');
-            collision.obj.destroy();
+            collision.obj.cojer();
         } 
         else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Left");
@@ -254,8 +256,7 @@ Q.Sprite.extend("Mario",{
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
         else if(collision.obj.p.type===SPRITE_COIN){
-            Q.audio.play('coin.ogg');
-            collision.obj.destroy();
+            collision.obj.cojer();
         } 
         else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"top");
@@ -319,6 +320,7 @@ Q.Sprite.extend("Mario",{
                 collision.obj.setTile(collision.tileX,collision.tileY, 24); 
                 Q.audio.play('hit_head.ogg');
                 Q.audio.play('coin.ogg');
+                Q.state.inc("score",Q.state.get("valCoin"));
         }else if((collision.tile === 24 ||collision.tile === 44) && tipo==="top") { //Caja vacia
             Q.audio.play('hit_head.ogg');
         }else if(collision.tile === 38 ||collision.tile === 45) { //Mastil de la bandera     
@@ -369,13 +371,14 @@ Q.Sprite.extend("Mario",{
     }
 });
 /*----------------------------------HUD---------------------------------------*/
-//HUD
+//Score
 Q.UI.Text.extend("Score",{
     init:function(p) {
         this._super({
             label: "score: 0",    
             x: 0,
-            y: 0
+            y: 0,
+            color:"#ffffff",
             });
         Q.state.on("change.score",this,"score");
     },
@@ -383,9 +386,10 @@ Q.UI.Text.extend("Score",{
         this.p.label = "score: " + score;
     }
 });
+//Escena del HUD
 Q.scene('HUD',function(stage) {
   var container = stage.insert(new Q.UI.Container({x:70, y:10, fill: "rgba(0,0,0,0.5)"}));
-  container.insert(new Q.Score({x:0,y:0,size:32,color: "#ffffff"}));
+  container.insert(new Q.Score());
 });
 /*------------------------------ESCENAS BASE----------------------------------*/
 //Pantalla de inicio
@@ -398,13 +402,12 @@ Q.scene("initScreen",function(stage){
     //Musica principal del juego
     Q.audio.play('music_main.ogg',{ loop:true});
     Q.input.on("confirm",this,function(){
-        if(!Q.state.get("enJuego")){
             Q.audio.play('coin.ogg');
             Q.loadTMX("level.tmx", function() {
                 Q.stageScene("level1");
                 Q.stageScene("HUD",2);
+                Q.input.off("confirm");
             });
-        }
     });
 });
 //Pantalla de perdido
