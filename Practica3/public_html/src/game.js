@@ -77,8 +77,19 @@ Q.animations('Mario', {
 
 Q.animations('Bloopa', {
     bloopa: { frames: [0,1], rate: 1/2 },
-    bloopaDie: { frames: [0,1,2], rate: 1}
+    bloopaDie: { frames: [2,3], rate: 1/3},
+    bloopaDieStop: { frames: [2], rate: 1}
   });
+Q.animations('Goomba', {
+    goomba: { frames: [0,1], rate: 1/3},
+    goombaDie: { frames: [1,2,3], rate: 1/3},
+    goombaDieStop: { frames: [3], rate: 1}
+
+});
+
+Q.animations('Coin', {
+    coin: { frames: [0,1,2], rate: 1/2}
+});
 
 /*--------------------------------ENEMIGOS------------------------------------*/
 
@@ -95,7 +106,9 @@ Q.Sprite.extend("Bloopa",{
             type: SPRITE_ENEMY,
             collisionMask: SPRITE_PLAYER | SPRITE_TILES
         }); 
+        //this.add("2d,aiBounce");
         this.add("2d,aiBounce,animation");
+        this.play("bloopa");
     },
     muerte:function() {
       this.play("bloopaDie");
@@ -107,10 +120,11 @@ Q.Sprite.extend("Bloopa",{
       this.p.type=SPRITE_TILES; //asi si toca  amrio no perdemos.
     },
     step:function(){
-        this.play("bloopa");
+
         if(this.die) 
             this.muerteCont++;
-        if(this.muerteCont===25)
+        if(this.muerteCont==15) this.play("bloopaDieStop");
+        else if(this.muerteCont===25)
             this.destroy();
     }
 }); 
@@ -120,12 +134,32 @@ Q.Sprite.extend("Goomba",{
         this._super(p, { 
             vx:100,
             sheet: "goomba",
+            sprite: "Goomba",
             frame: 0,
+            die: false,
+            muerteCont:0,
             type: SPRITE_ENEMY,
             collisionMask: SPRITE_PLAYER | SPRITE_TILES
         }); 
-        this.add("2d,aiBounce");        
-    }
+        this.add("2d,aiBounce,animation");  
+        this.play("goomba");      
+    },
+    muerte:function() {
+        this.play("goombaDie");
+        this.die=true;
+        this.muerteCont=0;
+        this.vx=0;
+        this.p.vx=0;
+        this.del("aiBounce");
+        this.p.type=SPRITE_TILES; //asi si toca  amrio no perdemos.
+      },
+      step:function(){
+          if(this.die) 
+              this.muerteCont++;
+          if(this.muerteCont==20) this.play("goombaDieStop");
+          else if(this.muerteCont===25)
+                  this.destroy();
+      }
 }); 
 
 Q.Sprite.extend("Piranha",{ 
@@ -164,13 +198,15 @@ Q.Sprite.extend("Coin",{
     init:function(p){
         this._super(p,{
             sheet: "coin",
+            sprite:"Coin",
             frame: 0,
             gravity:0,
             vy:0,
             type: SPRITE_COIN,
             collisionMask: SPRITE_PLAYER
         });
-        this.add("2d");
+        this.add("2d,animation");
+        this.play("coin");
     }
 });
 //Sensor de posicion
@@ -443,8 +479,9 @@ Q.scene("level1",function(stage) {
                 //Bandera final
                 ["Flag", {x:102*34, y: (10*34)-15}],
                 //Enemigos
-                ["Bloopa", {x: 24*34, y: (15*34)}],
-                //["Goomba", {x: 27*34, y: 15*34}],
+                //["Bloopa", {x: 25*34, y: 15*34}],
+               // ["Bloopa", {x: 25*34, y: 15*34}],
+                ["Goomba", {x: 27*34, y: 15*34}],
                 //Sensor de la tuberia a la cueva
                 ["Sensor", {x: (56*34), y: (15*34),destX:(136*34)-17,destY:11*34}],
                 //Cueva del tesoro(2 grupos x 3 altura x 6 monedas/fila)(inicio en 139,6)
