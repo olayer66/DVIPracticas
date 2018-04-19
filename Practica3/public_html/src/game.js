@@ -54,7 +54,7 @@ Q.preload(function(){
     Q.compileSheets("bloopa.png","bloopa.json");
     Q.compileSheets("goomba.png","goomba.json");
     Q.compileSheets("coin.png","coin.json");
-    Q.state.set({ score: 0, lives: 1, pause:false,enJuego:false,valCoin:10,valEnemy:100 });
+    Q.state.set({ score: 0, lives: 4,coins:0, pause:false,enJuego:false,valCoin:10,valEnemy:100 });
     Q.loadTMX("mainMenu.tmx", function() {
     Q.stageScene("initScreen");
     });
@@ -77,8 +77,19 @@ Q.animations('Mario', {
 
 Q.animations('Bloopa', {
     bloopa: { frames: [0,1], rate: 1/2 },
-    bloopaDie: { frames: [0,1,2], rate: 1}
+    bloopaDie: { frames: [2,3], rate: 1/3},
+    bloopaDieStop: { frames: [2], rate: 1}
   });
+Q.animations('Goomba', {
+    goomba: { frames: [0,1], rate: 1/3},
+    goombaDie: { frames: [1,2,3], rate: 1/3},
+    goombaDieStop: { frames: [3], rate: 1}
+
+});
+
+Q.animations('Coin', {
+    coin: { frames: [0,1,2], rate: 1/2}
+});
 
 /*--------------------------------ENEMIGOS------------------------------------*/
 
@@ -95,9 +106,13 @@ Q.Sprite.extend("Bloopa",{
             type: SPRITE_ENEMY,
             collisionMask: SPRITE_PLAYER | SPRITE_TILES
         }); 
+        //this.add("2d,aiBounce");
         this.add("2d,aiBounce,animation");
+        this.play("bloopa");
     },
     muerte:function() {
+      Q.audio.play('kill_enemy.ogg');
+      
       this.play("bloopaDie");
       this.die=true;
       this.muerteCont=0;
@@ -107,10 +122,11 @@ Q.Sprite.extend("Bloopa",{
       this.p.type=SPRITE_TILES; //asi si toca  amrio no perdemos.
     },
     step:function(){
-        this.play("bloopa");
+
         if(this.die) 
             this.muerteCont++;
-        if(this.muerteCont===25)
+        if(this.muerteCont===15) this.play("bloopaDieStop");
+        else if(this.muerteCont===25)
             this.destroy();
     }
 }); 
@@ -120,12 +136,34 @@ Q.Sprite.extend("Goomba",{
         this._super(p, { 
             vx:100,
             sheet: "goomba",
+            sprite: "Goomba",
             frame: 0,
+            die: false,
+            muerteCont:0,
             type: SPRITE_ENEMY,
             collisionMask: SPRITE_PLAYER | SPRITE_TILES
         }); 
-        this.add("2d,aiBounce");        
-    }
+        this.add("2d,aiBounce,animation");  
+        this.play("goomba");      
+    },
+    muerte:function() {
+        Q.audio.play('kill_enemy.ogg');
+        Q.state.inc("score",Q.state.get("valEnemy"));
+        this.play("goombaDie");
+        this.die=true;
+        this.muerteCont=0;
+        this.vx=0;
+        this.p.vx=0;
+        this.del("aiBounce");
+        this.p.type=SPRITE_TILES; //asi si toca  amrio no perdemos.
+      },
+      step:function(){
+          if(this.die) 
+              this.muerteCont++;
+          if(this.muerteCont===20) this.play("goombaDieStop");
+          else if(this.muerteCont===25)
+                  this.destroy();
+      }
 }); 
 
 Q.Sprite.extend("Piranha",{ 
@@ -164,16 +202,19 @@ Q.Sprite.extend("Coin",{
     init:function(p){
         this._super(p,{
             sheet: "coin",
+            sprite:"Coin",
             frame: 0,
             gravity:0,
             vy:0,
             type: SPRITE_COIN,
             collisionMask: SPRITE_PLAYER
         });
-        this.add("2d");
+        this.add("2d,animation");
+        this.play("coin");
+        
     },
     cojer: function(){
-        Q.audio.play('kill_enemy.ogg');
+        Q.audio.play('coin.ogg');
         Q.state.inc("score",Q.state.get("valCoin"));
         this.destroy();
     }
@@ -222,9 +263,7 @@ Q.Sprite.extend("Mario",{
         this.on("bump.top",this,"stompT");
     },stompB:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) {
-            collision.obj.p.x=this.p.x;
-            collision.obj.muerte();
-           Q.audio.play('kill_enemy.ogg');
+           collision.obj.muerte();
            this.p.vy = -300;// make the player jump
         }else if(collision.obj.p.type===SPRITE_COIN){
             collision.obj.cojer();
@@ -371,25 +410,57 @@ Q.Sprite.extend("Mario",{
     }
 });
 /*----------------------------------HUD---------------------------------------*/
-//Score
+//Puntuacion
 Q.UI.Text.extend("Score",{
     init:function(p) {
         this._super({
-            label: "score: 0",    
+            label: "puntos: 0",    
             x: 0,
             y: 0,
-            color:"#ffffff",
+            color:"#ffffff"
             });
         Q.state.on("change.score",this,"score");
     },
     score:function(score) {
-        this.p.label = "score: " + score;
+        this.p.label = "puntos: " + score;
+    }
+});
+//vidas
+Q.UI.Text.extend("Lives",{
+    init:function(p) {
+        this._super({
+            label: "vidas: 0",    
+            x: 200,
+            y: 0,
+            color:"#ffffff"
+            });
+        Q.state.on("change.lives",this,"lives");
+    },
+    lives:function(lives) {
+        this.p.label = "vidas: " + lives;
+    }
+});
+//Monedas
+Q.UI.Text.extend("Coins",{
+    init:function(p) {
+        this._super({
+            label: "monedas: 0",    
+            x: 400,
+            y: 0,
+            color:"#ffffff"
+            });
+        Q.state.on("change.coins",this,"coins");
+    },
+    coins:function(coins) {
+        this.p.label = "monedas: " + coins;
     }
 });
 //Escena del HUD
 Q.scene('HUD',function(stage) {
-  var container = stage.insert(new Q.UI.Container({x:70, y:10, fill: "rgba(0,0,0,0.5)"}));
+  var container = stage.insert(new Q.UI.Container({x:Q.width/2, y:10, fill: "rgba(0,0,0,0.5)"}));
   container.insert(new Q.Score());
+  container.insert(new Q.Coins());
+  container.insert(new Q.Lives());
 });
 /*------------------------------ESCENAS BASE----------------------------------*/
 //Pantalla de inicio
@@ -446,8 +517,9 @@ Q.scene("level1",function(stage) {
                 //Bandera final
                 ["Flag", {x:102*34, y: (10*34)-15}],
                 //Enemigos
-                ["Bloopa", {x: 24*34, y: (15*34)}],
-                //["Goomba", {x: 27*34, y: 15*34}],
+                //["Bloopa", {x: 25*34, y: 15*34}],
+               // ["Bloopa", {x: 25*34, y: 15*34}],
+                ["Goomba", {x: 27*34, y: 15*34}],
                 //Sensor de la tuberia a la cueva
                 ["Sensor", {x: (56*34), y: (15*34),destX:(136*34)-17,destY:11*34}],
                 //Cueva del tesoro(2 grupos x 3 altura x 6 monedas/fila)(inicio en 139,6)
