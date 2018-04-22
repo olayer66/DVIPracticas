@@ -4,7 +4,7 @@
   <image source="../images/tiles.png" width="256" height="324"/>
  </tileset>
  <imagelayer name="background">
-  <image source="../images/bg_empty.png" width="800" height="800"/>
+  <image source="../images/bg_empty.png" trans="55aaff" width="800" height="800"/>
  </imagelayer>
  <layer name="Decoration" width="250" height="18">
   <data>

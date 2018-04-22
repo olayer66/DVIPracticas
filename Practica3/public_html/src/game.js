@@ -1,10 +1,12 @@
 /*---------------------------CARGA DE QUINTUS---------------------------------*/
-var SPRITE_PLAYER = 1;
+var SPRITE_NONE=0;
+var SPRITE_DEFAULT=1;
 var SPRITE_TILES = 2;
 var SPRITE_ENEMY = 4;
 var SPRITE_FLAG = 8;
 var SPRITE_COIN = 16;
 var SPRITE_SENSOR = 32;
+var SPRITE_PLAYER = 64;
 
 /* global Quintus */
 var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
@@ -30,8 +32,8 @@ Q.input.on("pausa",function() {
             Q.state.set("pause",false);
             Q.audio.play('music_main.ogg',{ loop:true});
             Q.stage().unpause();
-            Q.clearStage(3);
         }else{
+            Q.stage(2).show();
             Q.state.set("pause",true);
             Q.audio.stop();
             Q.audio.play('pause.ogg',{debounce:500});
@@ -57,7 +59,8 @@ Q.preload(function(){
     Q.state.set({ score: 0, lives: 0,coins:0, //Puntuaciones
                   pause:false,enJuego:false,//Estados del juego
                   valCoin:10,valEnemy:100,valBandera:600,valFinNivel:400,//Puntos por accion
-                  world:1,level:1,maxWorld:1//Control de niveles
+                  world:1,level:1,maxWorld:1,//Control de niveles
+                  timer:300//Temporizador
     });
     Q.loadTMX("mainMenu.tmx", function() {
     Q.stageScene("initScreen");
@@ -107,7 +110,7 @@ Q.Sprite.extend("Bloopa",{
             die: false,
             muerteCont: 0,
             type: SPRITE_ENEMY,
-            collisionMask: SPRITE_PLAYER | SPRITE_TILES
+            collisionMask: SPRITE_PLAYER | SPRITE_DEFAULT
         }); 
         //this.add("2d,aiBounce");
         this.add("2d,aiBounce,animation");
@@ -122,7 +125,7 @@ Q.Sprite.extend("Bloopa",{
       this.vx=0;
       this.p.vx=0;
       this.del("aiBounce");
-      this.p.type=SPRITE_TILES; //asi si toca  amrio no perdemos.
+      this.p.type=SPRITE_DEFAULT; //asi si toca  amrio no perdemos.
     },
     step:function(){
 
@@ -144,7 +147,7 @@ Q.Sprite.extend("Goomba",{
             die: false,
             muerteCont:0,
             type: SPRITE_ENEMY,
-            collisionMask: SPRITE_PLAYER | SPRITE_TILES
+            collisionMask: SPRITE_PLAYER |SPRITE_DEFAULT
         }); 
         this.add("2d,aiBounce,animation");  
         this.play("goomba");      
@@ -158,7 +161,7 @@ Q.Sprite.extend("Goomba",{
         this.vx=0;
         this.p.vx=0;
         this.del("aiBounce");
-        this.p.type=SPRITE_TILES; //asi si toca  amrio no perdemos.
+        this.p.type=SPRITE_DEFAULT; //asi si toca  amrio no perdemos.
       },
       step:function(){
           if(this.die) 
@@ -203,7 +206,7 @@ Q.Sprite.extend("Flag",{
     },
     step:function(){
         if(this.p.goDown && this.p.y<this.p.limInf){
-                this.p.y+=7;
+                this.p.y+=5;
         }   
     },
     captura:function(){
@@ -322,6 +325,7 @@ Q.Sprite.extend("Mario",{
             this.colMapa(collision,"top");
     },
     step:function(){
+        Q.state.dec("timer",1);
         //salto
         if(this.p.suelo){
             if(Q.inputs['up']) {
@@ -371,9 +375,17 @@ Q.Sprite.extend("Mario",{
         Q.audio.stop();
         Q.audio.play('music_die.ogg');
         this.destroy();
-        Q.loadTMX("endGame.tmx", function() {
-        Q.stageScene("loseScreen",{label:"Has perdido"});
-    });
+        Q.state.dec("lives",1);
+        if(Q.state.get("lives")===0){
+            Q.loadTMX("endGame.tmx", function() {
+                Q.stageScene("loseScreen",{label:"Game Over \n Pulsa enter para volver al menu principal"});
+            });
+        }else{
+            Q.loadTMX("nextLevel.tmx", function() {
+                Q.stageScene("winScreen",{label:"World "+Q.state.get("world")+" Level "+Q.state.get("level")});
+            });
+        }
+        
     },
     colMapa:function(collision,tipo){
         if(collision.tile === 37 && tipo==="top") { //caja llena
@@ -407,14 +419,11 @@ Q.Sprite.extend("Mario",{
                 Q.stageScene("winScreen",{label:"World "+Q.state.get("world")+" Level "+Q.state.get("level")});
             });
         }else if(collision.tile === 39 && this.p.auto) { //puerta castillo nextLevel
-            Q.loadTMX("world"+Q.state.get("world")+"level"+Q.state.get("level")+".tmx", function() {
-                Q.audio.play('music_main.ogg',{ loop:true});
-                Q.stageScene("W"+Q.state.get("world")+"L"+Q.state.get("level"));
-            });
+            this.loadLevel();
         }else if((collision.tile === 49 || collision.tile === 50) && tipo==="Down" && this.p.agachado){//Boca tuberia vertical
             var bandera=Q("Sensor");
             var that=this;
-            Q.audio.stop("music_main.ogg")
+            Q.audio.stop("music_main.ogg");
             Q.audio.play("music_underground.ogg",{loop:true});
             bandera.each(function() {
                 that.goDown(this.p.destX,this.p.destY);
@@ -454,6 +463,13 @@ Q.Sprite.extend("Mario",{
             }
         }else
             Q.state.inc("level",1);
+    },
+    loadLevel:function(){
+        Q.loadTMX("world"+Q.state.get("world")+"level"+Q.state.get("level")+".tmx", function() {
+            Q.stage(2).show();    
+            Q.audio.play('music_main.ogg',{ loop:true});
+            Q.stageScene("W"+Q.state.get("world")+"L"+Q.state.get("level"));
+        });
     }
 });
 /*----------------------------------HUD---------------------------------------*/
@@ -502,12 +518,34 @@ Q.UI.Text.extend("Coins",{
         this.p.label = "monedas\n " + coins;
     }
 });
+//Temporizador
+Q.UI.Text.extend("Timer",{
+    init:function(p) {
+        this._super({
+            label: "Tiempo\n 300",    
+            x: 700,
+            y: 0,
+            color:"#ffffff"
+            });
+        Q.state.on("change.timer",this,"timer");
+    },
+    timer:function(time) {
+        this.p.label = "Tiempo\n " + time;
+    }
+});
 //Escena del HUD
 Q.scene('HUD',function(stage) {
-  var container = stage.insert(new Q.UI.Container({x:0, y:10, fill: "rgba(0,0,0,0.5)"}));
+  var container = stage.insert(new Q.UI.Container({x:0, y: 10}));
   container.insert(new Q.Score());
   container.insert(new Q.Coins());
   container.insert(new Q.Lives());
+  container.insert(new Q.Timer());
+  stage.show= function(){
+      if(this.hidden)
+          this.hidden=false;
+      else
+          this.hidden=true;
+  };
 });
 /*------------------------------ESCENAS BASE----------------------------------*/
 //Pantalla de inicio
@@ -531,14 +569,21 @@ Q.scene("initScreen",function(stage){
 });
 //Pantalla de perdido
 Q.scene("loseScreen",function(stage){
+    Q.stage(2).show();
     Q.state.set("enJuego",false);
     Q.stageTMX("endGame.tmx",stage);
     stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: stage.options.label }));
     stage.insert(new Q.Goomba({x:(1*34),y:13*34,vx:80}));
     stage.insert(new Q.Goomba({x:(23*34),y:13*34,vx:-80}));
+    Q.input.on("confirm",this,function(){
+        Q.loadTMX("mainMenu.tmx", function() {
+            Q.stageScene("initScreen");
+        });
+    });
 });
 //Pantalla de ganado
 Q.scene("winScreen",function(stage){
+    Q.stage(2).show();
     Q.state.set("enJuego",false);
     Q.stageTMX("nextLevel.tmx",stage);
     stage.insert(new Q.UI.Text({x:Q.width/2, y: Q.height/2-100,size:32,color: "#ffffff",label: stage.options.label }));
@@ -700,12 +745,12 @@ Q.scene("W1L1",function(stage) {
 });
 //World 1 level 2
 Q.scene("W1L2",function(stage) {
-    var mario= new Q.Mario({x:(15*34)-17,y:10*34,limInfMapa:17*34});
+    var mario= new Q.Mario({x:(15*34)-17,y:15*34,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
-        //["Flag", {x:(120*34)+1, y: (8*34)+17,limInf:(14*34)+14}]
+        ["Flag", {x:(120*34)+1, y: (160*34)+17,limInf:(14*34)+14}],
         //Sensor de la tuberia a la cueva
-        
+        //No hay
         //Enemigos
         ["Bloopa", {x: (34*34)+17, y: 13*34}],
         ["Bloopa", {x: (41*34)+17, y: 11*34}],
@@ -738,7 +783,7 @@ Q.scene("W1L3",function(stage) {
     var mario= new Q.Mario({x:(15*34)-17,y:15*34,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
-        //["Flag", {x:(120*34)+1, y: (8*34)+17,limInf:(14*34)+14}],
+        ["Flag", {x:(218*34)+1, y: (8*34)+17,limInf:(14*34)+14}],
         //Sensor de entrada/salida de la cueva
         ["Sensor", {orX:195*34,orY:13*34,destX:(51*34)-17,destY:12*34}],
         //Enemigos
