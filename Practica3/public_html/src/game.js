@@ -56,7 +56,7 @@ Q.preload(function(){
     Q.compileSheets("bloopa.png","bloopa.json");
     Q.compileSheets("goomba.png","goomba.json");
     Q.compileSheets("coin.png","coin.json");
-    Q.state.set({ score: 0, lives: 0,coins:0, //Puntuaciones
+    Q.state.set({ score: 0, lives: 0,coins:0,coins1Up:100, //Puntuaciones
                   pause:false,enJuego:false,//Estados del juego
                   valCoin:10,valEnemy:100,valBandera:600,valFinNivel:400,//Puntos por accion
                   world:1,level:1,maxWorld:1,//Control de niveles
@@ -98,170 +98,8 @@ Q.animations('Coin', {
     coin: { frames: [0,1,2], rate: 1/2}
 });
 
-/*--------------------------------ENEMIGOS------------------------------------*/
-
-Q.Sprite.extend("Bloopa",{ 
-    init: function(p) { 
-        this._super(p, { 
-            sheet: "bloopa",
-            sprite:"Bloopa",
-            frame: 0,
-            vx:100,
-            die: false,
-            muerteCont: 0,
-            type: SPRITE_ENEMY,
-            collisionMask: SPRITE_PLAYER | SPRITE_DEFAULT
-        }); 
-        //this.add("2d,aiBounce");
-        this.add("2d,aiBounce,animation");
-        this.play("bloopa");
-    },
-    muerte:function() {
-      Q.audio.play('kill_enemy.ogg');
-      Q.state.inc("score",Q.state.get("valEnemy"));
-      this.play("bloopaDie");
-      this.die=true;
-      this.muerteCont=0;
-      this.vx=0;
-      this.p.vx=0;
-      this.del("aiBounce");
-      this.p.type=SPRITE_DEFAULT; //asi si toca  amrio no perdemos.
-    },
-    step:function(){
-
-        if(this.die) 
-            this.muerteCont++;
-        if(this.muerteCont===15) this.play("bloopaDieStop");
-        else if(this.muerteCont===25)
-            this.destroy();
-    }
-}); 
-
-Q.Sprite.extend("Goomba",{ 
-    init: function(p) { 
-        this._super(p, { 
-            vx:100,
-            sheet: "goomba",
-            sprite: "Goomba",
-            frame: 0,
-            die: false,
-            muerteCont:0,
-            type: SPRITE_ENEMY,
-            collisionMask: SPRITE_PLAYER |SPRITE_DEFAULT
-        }); 
-        this.add("2d,aiBounce,animation");  
-        this.play("goomba");      
-    },
-    muerte:function() {
-        Q.audio.play('kill_enemy.ogg');
-        Q.state.inc("score",Q.state.get("valEnemy"));
-        this.play("goombaDie");
-        this.die=true;
-        this.muerteCont=0;
-        this.vx=0;
-        this.p.vx=0;
-        this.del("aiBounce");
-        this.p.type=SPRITE_DEFAULT; //asi si toca  amrio no perdemos.
-      },
-      step:function(){
-          if(this.die) 
-              this.muerteCont++;
-          if(this.muerteCont===20) this.play("goombaDieStop");
-          else if(this.muerteCont===25)
-                  this.destroy();
-      }
-}); 
-
-Q.Sprite.extend("Piranha",{ 
-    init: function(p) { 
-        this._super(p, { 
-            hitPoints: 10, 
-            damage: 5, 
-            x: 5, 
-            y: 1,
-            sheet: "piranha",
-            frame: 0,
-            type: SPRITE_ENEMY,
-            collisionMask: SPRITE_PLAYER | SPRITE_TILES | SPRITE_ENEMY
-        }); 
-        this.add("2d,aiBounce");        
-    }
-});
-
-/*--------------------------------OTROS---------------------------------------*/
-//Bandera
-Q.Sprite.extend("Flag",{ 
-    init: function(p) { 
-        this._super(p, { 
-            asset: "flag.png",
-            type: SPRITE_FLAG,
-            goDown:false,
-            limInf:0,
-            gravity:0,
-            vy:0,
-            collisionMask: SPRITE_PLAYER
-        });
-        this.add("2d");
-        this.on("bump.top,bump.left",this,"captura");
-    },
-    step:function(){
-        if(this.p.goDown && this.p.y<this.p.limInf){
-                this.p.y+=5;
-        }   
-    },
-    captura:function(){
-        this.del("2d");
-        Q.state.inc("score",Q.state.get("valBandera"));
-    }
-});
-//Monedas
-Q.Sprite.extend("Coin",{
-    init:function(p){
-        this._super(p,{
-            sheet: "coin",
-            sprite:"Coin",
-            frame: 0,
-            gravity:0,
-            vy:0,
-            type: SPRITE_COIN,
-            collisionMask: SPRITE_PLAYER
-        });
-        this.add("2d,animation");
-        this.play("coin");
-        
-    },
-    cojer: function(){
-        Q.audio.play('coin.ogg');
-        Q.state.inc("score",Q.state.get("valCoin"));
-        Q.state.inc("coins",1);
-        this.destroy();
-    }
-});
-//Sensor de posicion
-Q.Sprite.extend("Sensor",{
-    init:function(p){
-        this._super(p,{
-            asset:"empty.png",
-            x:0,
-            y:0,
-            //Posiciones del punto de origen
-            orX:0,
-            orY:0,
-            //Posiciones del punto de destino
-            destX:0,
-            destY:0,
-            hidden:false,
-            type: SPRITE_SENSOR
-        }); 
-        this.add("2d");
-        this.on("bump.bottom",this,"stomp");
-        this.p.gravity=0;
-    },
-    stomp: function(collision) {
-      this.p.vy = 0; // make the player jump
-  }
-});
 /*-------------------------------JUGADOR--------------------------------------*/
+
 Q.Sprite.extend("Mario",{
     init:function(p) {
         this._super(p, {
@@ -472,6 +310,201 @@ Q.Sprite.extend("Mario",{
         });
     }
 });
+
+/*--------------------------------ENEMIGOS------------------------------------*/
+//Bloopa
+Q.Sprite.extend("Bloopa",{ 
+    init: function(p) { 
+        this._super(p, { 
+            sheet: "bloopa",
+            sprite:"Bloopa",
+            frame: 0,
+            vx:100,
+            die: false,
+            muerteCont: 0,
+            type: SPRITE_ENEMY,
+            collisionMask: SPRITE_PLAYER | SPRITE_DEFAULT
+        }); 
+        //this.add("2d,aiBounce");
+        this.add("2d,aiBounce,animation");
+        this.play("bloopa");
+    },
+    muerte:function() {
+      Q.audio.play('kill_enemy.ogg');
+      Q.state.inc("score",Q.state.get("valEnemy"));
+      this.play("bloopaDie");
+      this.die=true;
+      this.muerteCont=0;
+      this.vx=0;
+      this.p.vx=0;
+      this.del("aiBounce");
+      this.p.type=SPRITE_DEFAULT; //asi si toca  amrio no perdemos.
+    },
+    step:function(){
+
+        if(this.die) 
+            this.muerteCont++;
+        if(this.muerteCont===15) this.play("bloopaDieStop");
+        else if(this.muerteCont===25)
+            this.destroy();
+    }
+}); 
+//Goomba
+Q.Sprite.extend("Goomba",{ 
+    init: function(p) { 
+        this._super(p, { 
+            vx:100,
+            sheet: "goomba",
+            sprite: "Goomba",
+            frame: 0,
+            die: false,
+            muerteCont:0,
+            type: SPRITE_ENEMY,
+            collisionMask: SPRITE_PLAYER |SPRITE_DEFAULT
+        }); 
+        this.add("2d,aiBounce,animation");  
+        this.play("goomba");      
+    },
+    muerte:function() {
+        Q.audio.play('kill_enemy.ogg');
+        Q.state.inc("score",Q.state.get("valEnemy"));
+        this.play("goombaDie");
+        this.die=true;
+        this.muerteCont=0;
+        this.vx=0;
+        this.p.vx=0;
+        this.del("aiBounce");
+        this.p.type=SPRITE_DEFAULT; //asi si toca  amrio no perdemos.
+      },
+      step:function(){
+          if(this.die) 
+              this.muerteCont++;
+          if(this.muerteCont===20) this.play("goombaDieStop");
+          else if(this.muerteCont===25)
+                  this.destroy();
+      }
+}); 
+//Piranha
+Q.Sprite.extend("Piranha",{ 
+    init: function(p) { 
+        this._super(p, { 
+            hitPoints: 10, 
+            damage: 5, 
+            x: 5, 
+            y: 1,
+            sheet: "piranha",
+            frame: 0,
+            type: SPRITE_ENEMY,
+            collisionMask: SPRITE_PLAYER | SPRITE_TILES | SPRITE_ENEMY
+        }); 
+        this.add("2d,aiBounce");        
+    }
+});
+
+/*--------------------------------OTROS---------------------------------------*/
+//Bandera
+Q.Sprite.extend("Flag",{ 
+    init: function(p) { 
+        this._super(p, { 
+            asset: "flag.png",
+            type: SPRITE_FLAG,
+            goDown:false,
+            limInf:0,
+            gravity:0,
+            vy:0,
+            collisionMask: SPRITE_PLAYER
+        });
+        this.add("2d");
+        this.on("bump.top,bump.left",this,"captura");
+    },
+    step:function(){
+        if(this.p.goDown && this.p.y<this.p.limInf){
+                this.p.y+=5;
+        }   
+    },
+    captura:function(){
+        this.del("2d");
+        Q.state.inc("score",Q.state.get("valBandera"));
+    }
+});
+//Monedas
+Q.Sprite.extend("Coin",{
+    init:function(p){
+        this._super(p,{
+            sheet: "coin",
+            sprite:"Coin",
+            frame: 0,
+            gravity:0,
+            vy:0,
+            type: SPRITE_COIN,
+            collisionMask: SPRITE_PLAYER
+        });
+        this.add("2d,animation");
+        this.play("coin");
+        
+    },
+    cojer: function(){
+        Q.audio.play('coin.ogg');
+        Q.state.inc("score",Q.state.get("valCoin"));
+        Q.state.inc("coins",1);
+        this.contarMonedas();
+        this.destroy();
+    },
+    contarMonedas:function(){
+        if( Q.state.get("coins")===Q.state.get("coins1Up")){
+            Q.state.inc("lives",1);
+            Q.state.set("coins",0);
+        }
+    }
+});
+//Sensor de posicion
+Q.Sprite.extend("Sensor",{
+    init:function(p){
+        this._super(p,{
+            asset:"empty.png",
+            x:0,
+            y:0,
+            //Posiciones del punto de origen
+            orX:0,
+            orY:0,
+            //Posiciones del punto de destino
+            destX:0,
+            destY:0,
+            hidden:false,
+            type: SPRITE_SENSOR
+        }); 
+        this.add("2d");
+        this.on("bump.bottom",this,"stomp");
+        this.p.gravity=0;
+    },
+    stomp: function(collision) {
+      this.p.vy = 0; // make the player jump
+  }
+});
+/*-------------------------------TEMPORIZADOR---------------------------------*/
+Q.Class.extend("Timer",{
+    init:function(p) { 
+        this._super(p, { 
+            active:false,
+            cont:0
+        });
+    },
+    start:function(){
+        this.p.active=true;
+    },
+    stop:function(){
+        this.p.active=false;
+    },
+    reset:function(){
+        this.p.active=false;
+        Q.state.set("timer",300);
+    },
+    step:function(){
+        if(this.p.active){
+            
+        }
+    }
+});
 /*----------------------------------HUD---------------------------------------*/
 //Puntuacion
 Q.UI.Text.extend("Score",{
@@ -560,8 +593,8 @@ Q.scene("initScreen",function(stage){
     Q.input.on("confirm",this,function(){
             Q.audio.play('coin.ogg');
             Q.state.set("lives",4);
-            Q.loadTMX("world1level1.tmx", function() {
-                Q.stageScene("W1L1");
+            Q.loadTMX("world1level4.tmx", function() {
+                Q.stageScene("W1L4");
                 Q.stageScene("HUD",2);
                 Q.input.off("confirm");
             });
@@ -598,78 +631,10 @@ Q.scene('pauseMessage',function(stage) {
   container.fit(20);
 });
 /*----------------------------------NIVELES-----------------------------------*/ 
-/*Posicion de un sprite
-     * y= (numTileY*TamTile) + [tamTile/2]
-     * x= (numTileX*TamTile) + [tamTile/2]
-     */
-//Nivel de testing
-Q.scene("level1",function(stage) {
-    var mario= new Q.Mario({x:(19*34)-17,y:15*34,limInfMapa:17*34});
-    //Sprites a insertar en el mapa
-    var levelAssets = [
-                //Bandera final
-                ["Flag", {x:102*34, y: (10*34)-15,limInf:(14*34)+14}],
-                //Enemigos
-                //["Bloopa", {x: 25*34, y: 15*34}],
-               // ["Bloopa", {x: 25*34, y: 15*34}],
-                ["Goomba", {x: 27*34, y: 15*34}],
-                //Sensor de la tuberia a la cueva
-                ["Sensor", {x: (56*34), y: (15*34),destX:(136*34)-17,destY:11*34}],
-                //Cueva del tesoro(2 grupos x 3 altura x 6 monedas/fila)(inicio en 139,6)
-                //Grupo arriba
-                //fila 1
-                ["Coin", {x: (139*34)+17, y: (8*34)+17}],
-                ["Coin", {x: (140*34)+17, y: (8*34)+17}], 
-                ["Coin", {x: (141*34)+17, y: (8*34)+17}], 
-                ["Coin", {x: (142*34)+17, y: (8*34)+17}], 
-                ["Coin", {x: (143*34)+17, y: (8*34)+17}], 
-                ["Coin", {x: (144*34)+17, y: (8*34)+17}],
-                //fila 2
-                ["Coin", {x: (139*34)+17, y: (9*34)+17}],
-                ["Coin", {x: (140*34)+17, y: (9*34)+17}], 
-                ["Coin", {x: (141*34)+17, y: (9*34)+17}], 
-                ["Coin", {x: (142*34)+17, y: (9*34)+17}], 
-                ["Coin", {x: (143*34)+17, y: (9*34)+17}], 
-                ["Coin", {x: (144*34)+17, y: (9*34)+17}],
-                //fila 3
-                ["Coin", {x: (139*34)+17, y: (10*34)+17}],
-                ["Coin", {x: (140*34)+17, y: (10*34)+17}], 
-                ["Coin", {x: (141*34)+17, y: (10*34)+17}], 
-                ["Coin", {x: (142*34)+17, y: (10*34)+17}], 
-                ["Coin", {x: (143*34)+17, y: (10*34)+17}], 
-                ["Coin", {x: (144*34)+17, y: (10*34)+17}],
-                //Grupo abajo
-                //fila 1
-                ["Coin", {x: (139*34)+17, y: (12*34)+17}],
-                ["Coin", {x: (140*34)+17, y: (12*34)+17}], 
-                ["Coin", {x: (141*34)+17, y: (12*34)+17}], 
-                ["Coin", {x: (142*34)+17, y: (12*34)+17}], 
-                ["Coin", {x: (143*34)+17, y: (12*34)+17}], 
-                ["Coin", {x: (144*34)+17, y: (12*34)+17}],
-                //fila 2
-                ["Coin", {x: (139*34)+17, y: (13*34)+17}],
-                ["Coin", {x: (140*34)+17, y: (13*34)+17}], 
-                ["Coin", {x: (141*34)+17, y: (13*34)+17}], 
-                ["Coin", {x: (142*34)+17, y: (13*34)+17}], 
-                ["Coin", {x: (143*34)+17, y: (13*34)+17}], 
-                ["Coin", {x: (144*34)+17, y: (13*34)+17}],
-                //fila 3
-                ["Coin", {x: (139*34)+17, y: (14*34)+17}],
-                ["Coin", {x: (140*34)+17, y: (14*34)+17}], 
-                ["Coin", {x: (141*34)+17, y: (14*34)+17}], 
-                ["Coin", {x: (142*34)+17, y: (14*34)+17}], 
-                ["Coin", {x: (143*34)+17, y: (14*34)+17}], 
-                ["Coin", {x: (144*34)+17, y: (14*34)+17}]      
-            ];
-    Q.state.set("enJuego",true);
-    //Cargamos el mapa
-    Q.stageTMX("level.tmx",stage);
-    //Insertamos todos los sprites del nivel
-    stage.loadAssets(levelAssets);
-    //Insertamos a mario
-    stage.insert(mario);
-    stage.add("viewport").follow(mario,{x:true,y:false});
-});
+/*Posicion de un objeto en el mapa
+    * y= (numTileY*TamTile) + [tamTile/2]
+    * x= (numTileX*TamTile) + [tamTile/2]
+*/
 //World 1 level 1
 Q.scene("W1L1",function(stage) {
     var mario= new Q.Mario({x:(15*34)-17,y:15*34,limInfMapa:17*34});
@@ -820,4 +785,138 @@ Q.scene("W1L3",function(stage) {
     stage.insert(mario);
     stage.add("viewport").follow(mario,{x:true,y:false});
     stage.viewport.offsetY=240;
+});
+//World 1 level 4
+Q.scene("W1L4",function(stage) {
+    var mario= new Q.Mario({x:(15*34)-17,y:15*34,limInfMapa:17*34});
+    //Sprites a insertar en el mapa
+    var levelAssets = [
+        //Hacha
+        //["Axe", {x: (183*34)+17, y: 11*34}],
+        //Bowser
+        //["Bowser", {x: (181*34)+17, y: 12*34}],
+        //Princesa
+        //["Princess", {x: (190*34)+17, y: 12*34}],
+        //Enemigos
+        //["Bloopa", {x: (58*34)+17, y: 15*34}],
+       // ["Bloopa", {x: (63*34)+17, y: 15*34}],
+        //["Bloopa", {x: (68*34)+17, y: 15*34}],
+       // ["Bloopa", {x: (73*34)+17, y: 15*34}],
+        ["Goomba", {x: (33*34)+17, y: 15*34}],
+        ["Goomba", {x: (43*34)+17, y: 15*34}],
+        ["Goomba", {x: (123*34)+17, y: 15*34}],
+        ["Goomba", {x: (125*34)+17, y: 4*34}],
+        ["Goomba", {x: (131*34)+17, y: 15*34}],
+        ["Goomba", {x: (139*34)+17, y: 15*34}],
+        ["Goomba", {x: (146*34)+17, y: 15*34}],
+        
+        //Monedas
+        ["Coin", {x: (115*34)+17, y: (4*34)+17}],
+        ["Coin", {x: (115*34)+17, y: (5*34)+17}],
+        ["Coin", {x: (115*34)+17, y: (6*34)+17}],
+        ["Coin", {x: (115*34)+17, y: (7*34)+17}],
+        ["Coin", {x: (116*34)+17, y: (4*34)+17}],
+        ["Coin", {x: (116*34)+17, y: (5*34)+17}],
+        ["Coin", {x: (116*34)+17, y: (6*34)+17}],
+        ["Coin", {x: (116*34)+17, y: (7*34)+17}],
+        ["Coin", {x: (131*34)+17, y: (2*34)+17}],
+        ["Coin", {x: (131*34)+17, y: (3*34)+17}],
+        ["Coin", {x: (131*34)+17, y: (4*34)+17}],
+        ["Coin", {x: (113*34)+17, y: (13*34)+17}],
+        ["Coin", {x: (113*34)+17, y: (14*34)+17}],
+        ["Coin", {x: (113*34)+17, y: (15*34)+17}],
+        ["Coin", {x: (114*34)+17, y: (13*34)+17}],
+        ["Coin", {x: (114*34)+17, y: (14*34)+17}],
+        ["Coin", {x: (114*34)+17, y: (15*34)+17}],
+        ["Coin", {x: (138*34)+17, y: (2*34)+17}],
+        ["Coin", {x: (139*34)+17, y: (2*34)+17}],
+        ["Coin", {x: (140*34)+17, y: (2*34)+17}],
+        ["Coin", {x: (141*34)+17, y: (2*34)+17}],
+        ["Coin", {x: (138*34)+17, y: (3*34)+17}],
+        ["Coin", {x: (139*34)+17, y: (3*34)+17}],
+        ["Coin", {x: (140*34)+17, y: (3*34)+17}],
+        ["Coin", {x: (141*34)+17, y: (3*34)+17}],
+        ["Coin", {x: (138*34)+17, y: (4*34)+17}],
+        ["Coin", {x: (139*34)+17, y: (4*34)+17}],
+        ["Coin", {x: (140*34)+17, y: (4*34)+17}],
+        ["Coin", {x: (141*34)+17, y: (4*34)+17}]
+    ];
+    Q.state.set("enJuego",true);
+    //Cargamos el mapa
+    Q.stageTMX("world1level4.tmx",stage);
+    //Insertamos todos los sprites del nivel
+    stage.loadAssets(levelAssets);
+    //Insertamos a mario
+    stage.insert(mario);
+    stage.add("viewport").follow(mario,{x:true,y:false});
+    stage.viewport.offsetY=240;
+});
+/*-------------------------------PRUEBAS--------------------------------------*/
+//Nivel de testing
+Q.scene("testing",function(stage) {
+    var mario= new Q.Mario({x:(19*34)-17,y:15*34,limInfMapa:17*34});
+    //Sprites a insertar en el mapa
+    var levelAssets = [
+                //Bandera final
+                ["Flag", {x:102*34, y: (10*34)-15,limInf:(14*34)+14}],
+                //Enemigos
+                //["Bloopa", {x: 25*34, y: 15*34}],
+               // ["Bloopa", {x: 25*34, y: 15*34}],
+                ["Goomba", {x: 27*34, y: 15*34}],
+                //Sensor de la tuberia a la cueva
+                ["Sensor", {x: (56*34), y: (15*34),destX:(136*34)-17,destY:11*34}],
+                //Cueva del tesoro(2 grupos x 3 altura x 6 monedas/fila)(inicio en 139,6)
+                //Grupo arriba
+                //fila 1
+                ["Coin", {x: (139*34)+17, y: (8*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (8*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (8*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (8*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (8*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (8*34)+17}],
+                //fila 2
+                ["Coin", {x: (139*34)+17, y: (9*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (9*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (9*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (9*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (9*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (9*34)+17}],
+                //fila 3
+                ["Coin", {x: (139*34)+17, y: (10*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (10*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (10*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (10*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (10*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (10*34)+17}],
+                //Grupo abajo
+                //fila 1
+                ["Coin", {x: (139*34)+17, y: (12*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (12*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (12*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (12*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (12*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (12*34)+17}],
+                //fila 2
+                ["Coin", {x: (139*34)+17, y: (13*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (13*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (13*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (13*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (13*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (13*34)+17}],
+                //fila 3
+                ["Coin", {x: (139*34)+17, y: (14*34)+17}],
+                ["Coin", {x: (140*34)+17, y: (14*34)+17}], 
+                ["Coin", {x: (141*34)+17, y: (14*34)+17}], 
+                ["Coin", {x: (142*34)+17, y: (14*34)+17}], 
+                ["Coin", {x: (143*34)+17, y: (14*34)+17}], 
+                ["Coin", {x: (144*34)+17, y: (14*34)+17}]      
+            ];
+    Q.state.set("enJuego",true);
+    //Cargamos el mapa
+    Q.stageTMX("level.tmx",stage);
+    //Insertamos todos los sprites del nivel
+    stage.loadAssets(levelAssets);
+    //Insertamos a mario
+    stage.insert(mario);
+    stage.add("viewport").follow(mario,{x:true,y:false});
 });
