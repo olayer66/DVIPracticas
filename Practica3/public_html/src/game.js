@@ -7,6 +7,9 @@ var SPRITE_FLAG = 8;
 var SPRITE_COIN = 16;
 var SPRITE_SENSOR = 32;
 var SPRITE_PLAYER = 64;
+var SPRITE_BOWSER = 128;
+var SPRITE_PRINCESS = 256;
+var SPRITE_AXE = 512;
 
 /* global Quintus */
 var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
@@ -400,6 +403,33 @@ Q.Sprite.extend("Piranha",{
         this.add("2d,aiBounce");        
     }
 });
+//Bowser
+Q.Sprite.extend("Bowser",{ 
+    init: function(p) { 
+        this._super(p, { 
+            vx:100,
+            sheet: "goomba",
+            sprite: "Goomba",
+            frame: 0,
+            die: false,
+            muerteCont:0,
+            type: SPRITE_BOWSER,
+            collisionMask: SPRITE_PLAYER | SPRITE_DEFAULT
+        }); 
+        this.add("2d,aiBounce,animation");  
+        this.on("bump","matar");
+    },
+    matar:function(collision){
+        if(collision.obj.p.type===SPRITE_PLAYER) 
+            collision.obj.muerte();
+    },
+    muerte:function() {
+        
+    },
+    step:function(){
+        
+    }
+}); 
 
 /*--------------------------------OTROS---------------------------------------*/
 //Bandera
