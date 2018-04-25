@@ -359,7 +359,77 @@ Q.Sprite.extend("Goomba",{
             vx:100,
             sheet: "goomba",
             sprite: "Goomba",
-            frame: 0,
+            frame: 4,
+            die: false,
+            muerteCont:0,
+            type: SPRITE_ENEMY,
+            collisionMask: SPRITE_PLAYER |SPRITE_DEFAULT
+        }); 
+        this.add("2d,aiBounce,animation");  
+        this.play("goomba");      
+    },
+    muerte:function() {
+        Q.audio.play('kill_enemy.ogg');
+        Q.state.inc("score",Q.state.get("valEnemy"));
+        this.play("goombaDie");
+        this.die=true;
+        this.muerteCont=0;
+        this.vx=0;
+        this.p.vx=0;
+        this.del("aiBounce");
+        this.p.type=SPRITE_DEFAULT; //asi si toca  amrio no perdemos.
+      },
+      step:function(){
+          if(this.die) 
+              this.muerteCont++;
+          if(this.muerteCont===20) this.play("goombaDieStop");
+          else if(this.muerteCont===25)
+                  this.destroy();
+      }
+}); 
+//GoombaCave
+Q.Sprite.extend("GoombaCave",{ 
+    init: function(p) { 
+        this._super(p, { 
+            vx:100,
+            sheet: "goombaCave",
+            sprite: "Goomba",
+            frame: 4,
+            die: false,
+            muerteCont:0,
+            type: SPRITE_ENEMY,
+            collisionMask: SPRITE_PLAYER |SPRITE_DEFAULT
+        }); 
+        this.add("2d,aiBounce,animation");  
+        this.play("goomba");      
+    },
+    muerte:function() {
+        Q.audio.play('kill_enemy.ogg');
+        Q.state.inc("score",Q.state.get("valEnemy"));
+        this.play("goombaDie");
+        this.die=true;
+        this.muerteCont=0;
+        this.vx=0;
+        this.p.vx=0;
+        this.del("aiBounce");
+        this.p.type=SPRITE_DEFAULT; //asi si toca  amrio no perdemos.
+      },
+      step:function(){
+          if(this.die) 
+              this.muerteCont++;
+          if(this.muerteCont===20) this.play("goombaDieStop");
+          else if(this.muerteCont===25)
+                  this.destroy();
+      }
+}); 
+//GoombaCastle
+Q.Sprite.extend("GoombaCastle",{ 
+    init: function(p) { 
+        this._super(p, { 
+            vx:100,
+            sheet: "goombaCastle",
+            sprite: "Goomba",
+            frame: 4,
             die: false,
             muerteCont:0,
             type: SPRITE_ENEMY,
@@ -786,13 +856,13 @@ Q.scene("W1L3",function(stage) {
         ["Bloopa", {x: (89*34)+17, y: 15*34}],
         ["Bloopa", {x: (114*34)+17, y: 15*34}],
         ["Bloopa", {x: (117*34)+17, y: 15*34}],
-        ["Goomba", {x: (69*34)+17, y: 15*34}],
-        ["Goomba", {x: (70*34)+17, y: 15*34}],
-        ["Goomba", {x: (106*34)+17, y: 15*34}],
-        ["Goomba", {x: (105*34)+17, y: 15*34}],
-        ["Goomba", {x: (136*34)+17, y: 15*34}],
-        ["Goomba", {x: (140*34)+17, y: 15*34}],
-        ["Goomba", {x: (157*34)+17, y: 15*34}],
+        ["GoombaCave", {x: (69*34)+17, y: 15*34}],
+        ["GoombaCave", {x: (70*34)+17, y: 15*34}],
+        ["GoombaCave", {x: (106*34)+17, y: 15*34}],
+        ["GoombaCave", {x: (105*34)+17, y: 15*34}],
+        ["GoombaCave", {x: (136*34)+17, y: 15*34}],
+        ["GoombaCave", {x: (140*34)+17, y: 15*34}],
+        ["GoombaCave", {x: (157*34)+17, y: 15*34}],
         //Monedas
         ["Coin", {x: (85*34)+17, y: (10*34)+17}],
         ["Coin", {x: (86*34)+17, y: (10*34)+17}],
@@ -832,13 +902,13 @@ Q.scene("W1L4",function(stage) {
        // ["Bloopa", {x: (63*34)+17, y: 15*34}],
         //["Bloopa", {x: (68*34)+17, y: 15*34}],
        // ["Bloopa", {x: (73*34)+17, y: 15*34}],
-        ["Goomba", {x: (33*34)+17, y: 15*34}],
-        ["Goomba", {x: (43*34)+17, y: 15*34}],
-        ["Goomba", {x: (123*34)+17, y: 15*34}],
-        ["Goomba", {x: (125*34)+17, y: 4*34}],
-        ["Goomba", {x: (131*34)+17, y: 15*34}],
-        ["Goomba", {x: (139*34)+17, y: 15*34}],
-        ["Goomba", {x: (146*34)+17, y: 15*34}],
+        ["GoombaCastle", {x: (33*34)+17, y: 15*34}],
+        ["GoombaCastle", {x: (43*34)+17, y: 15*34}],
+        ["GoombaCastle", {x: (123*34)+17, y: 15*34}],
+        ["GoombaCastle", {x: (125*34)+17, y: 4*34}],
+        ["GoombaCastle", {x: (131*34)+17, y: 15*34}],
+        ["GoombaCastle", {x: (139*34)+17, y: 15*34}],
+        ["GoombaCastle", {x: (146*34)+17, y: 15*34}],
         
         //Monedas
         ["Coin", {x: (115*34)+17, y: (4*34)+17}],
