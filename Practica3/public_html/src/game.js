@@ -10,7 +10,8 @@ var SPRITE_PLAYER = 64;
 var SPRITE_BOWSER = 128;
 var SPRITE_PRINCESS = 256;
 var SPRITE_AXE = 512;
-
+var SPRITE_BOWSER_SHOOT=1024;
+var backMusic;
 /* global Quintus */
 var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
                 .include("Sprites, Scenes, Input, 2D, Anim, Touch, UI,TMX,Audio")//Librerias del quintus cargadas
@@ -33,8 +34,10 @@ Q.input.on("pausa",function() {
     if(Q.state.get("enJuego")){
         if(Q.state.get("pause")) {
             Q.state.set("pause",false);
-            Q.audio.play('music_main.ogg',{ loop:true});
+            backMusic.playMusic();
             Q.stage().unpause();
+            Q.stage(2).show();
+            Q.clearStage(3);
         }else{
             Q.stage(2).show();
             Q.state.set("pause",true);
@@ -46,32 +49,59 @@ Q.input.on("pausa",function() {
     }
   });
 //Imagenes
-Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","main_title.png","mario_small.png","piranha.png","princess.png","flag.png"]);
+Q.preload(["bg.png","bloopa.png","coin.png","empty.png","goomba.png","main_title.png","mario_small.png","piranha.png","princess.png","flag.png","bowser.png","bowser_fireball.png","axe.png"]);
 //JSON'S (falta crear el de piranha.png)
-Q.preload(["mario_small.json","coin.json","bloopa.json","goomba.json"]);
+Q.preload(["mario_small.json","coin.json","bloopa.json","goomba.json","bowser.json","bowser_fireball.json","axe.json"]);
 //Musica
-Q.preload(["music_main.ogg","music_underground.ogg","jump_small.ogg","kill_enemy.ogg","music_die.ogg","hit_head.ogg","coin.ogg","music_level_complete.ogg","pause.ogg","down_pipe.ogg"]);
+Q.preload(["music_main.ogg","music_underground.ogg","music_dungeon.ogg","jump_small.ogg","kill_enemy.ogg","music_die.ogg","hit_head.ogg","coin.ogg","music_level_complete.ogg","pause.ogg","down_pipe.ogg"]);
 //Funcion de inicio
 
 Q.preload(function(){
+    //Compilacion del las sheets
     Q.compileSheets("tiles.png","tiles.json");
     Q.compileSheets("mario_small.png","mario_small.json");
     Q.compileSheets("bloopa.png","bloopa.json");
     Q.compileSheets("goomba.png","goomba.json");
     Q.compileSheets("coin.png","coin.json");
+    Q.compileSheets("bowser.png","bowser.json");
+    Q.compileSheets("bowser_fireball.png","bowser_fireball.json");
+    Q.compileSheets("axe.png","axe.json");
+    //Estado global de juego
     Q.state.set({ score: 0, lives: 0,coins:0,coins1Up:100, //Puntuaciones
                   pause:false,enJuego:false,//Estados del juego
                   valCoin:10,valEnemy:100,valBandera:600,valFinNivel:400,//Puntos por accion
-                  world:1,level:1,maxWorld:1,//Control de niveles
+                  world:1,level:1,maxWorld:1,worldtype:"main",//Control de niveles
                   timer:300//Temporizador
     });
+    //Controlador de la musica de fondo
+    backMusic= new Q.backMusic();
+    //Carga del menu principal
     Q.loadTMX("mainMenu.tmx", function() {
     Q.stageScene("initScreen");
     });
 });
-
-/*-----------------------------ANIMACIONES----------------------------------*/
-
+/*-----------------------------COMPONENTES------------------------------------*/
+//Control musica principal
+Q.Class.extend("backMusic", {
+    playMusic:function(){
+        switch (Q.state.get("worldtype")) {
+            case "main":
+                 Q.audio.play('music_main.ogg',{ loop:true});
+                break;
+            case "underground":
+                 Q.audio.play('music_underground.ogg',{ loop:true});
+                break;
+            case "dungeon":
+                 Q.audio.play('music_dungeon.ogg',{ loop:true});
+                break;
+            default:
+                 Q.audio.play('music_main.ogg',{ loop:true});
+                break;
+        }
+    }
+});
+/*-----------------------------ANIMACIONES------------------------------------*/
+//Animacion de Mario
 Q.animations('Mario', {
   run_right: { frames: [0,1,2], rate: 1/5}, 
   run_left: { frames: [15,16,17], rate:1/5 },
@@ -84,25 +114,37 @@ Q.animations('Mario', {
   jump_right: { frames: [3,4,5,6], rate: 1/2,loop: false},
   jump_left: { frames: [18,19,20,21], rate: 1/2,loop: false}
 });
-
+//Animacion del Bloopa
 Q.animations('Bloopa', {
     bloopa: { frames: [0,1], rate: 1/2 },
     bloopaDie: { frames: [2,3], rate: 1/3},
     bloopaDieStop: { frames: [2], rate: 1}
-  });
+});
+//Animacion del goomba  
 Q.animations('Goomba', {
     goomba: { frames: [0,1], rate: 1/3},
     goombaDie: { frames: [1,2,3], rate: 1/3},
     goombaDieStop: { frames: [3], rate: 1}
-
 });
-
+//Animacion de la moneda
 Q.animations('Coin', {
     coin: { frames: [0,1,2], rate: 1/2}
 });
-
+//Animacion de Bowser
+Q.animations('Bowser', {
+  run_right: { frames: [0,1,2,3], rate: 1/5}, 
+  run_left: { frames: [4,5,6,7], rate:1/5 },
+  die:{ frames: [0], rate:1/5 }
+});
+//Animacion del disparo de Bowser
+Q.animations('Bowser_fireball', {
+  shoot: { frames: [0,1], rate: 1/5} 
+});
+//Animacion del hacha
+Q.animations('Axe', {
+  shine: { frames: [0,1,2,3], rate: 1/5} 
+});
 /*-------------------------------JUGADOR--------------------------------------*/
-
 Q.Sprite.extend("Mario",{
     init:function(p) {
         this._super(p, {
@@ -264,16 +306,18 @@ Q.Sprite.extend("Mario",{
         }else if((collision.tile === 49 || collision.tile === 50) && tipo==="Down" && this.p.agachado){//Boca tuberia vertical
             var bandera=Q("Sensor");
             var that=this;
-            Q.audio.stop("music_main.ogg");
-            Q.audio.play("music_underground.ogg",{loop:true});
+            Q.audio.stop();
+            Q.state.set("worldtype","underground");
+            backMusic.playMusic();
             bandera.each(function() {
                 that.goDown(this.p.destX,this.p.destY);
             });
         }else if(collision.tile === 5 || collision.tile === 12 && tipo==="Right"){//Boca tuberia horizontal
             var bandera=Q("Sensor");
             var that=this;
-            Q.audio.stop("music_underground.ogg");
-            Q.audio.play("music_main.ogg",{loop:true});
+            Q.audio.stop();
+            Q.state.set("worldtype","main");
+            backMusic.playMusic();
             bandera.each(function() {
                 that.goDown(this.p.orX,this.p.orY);
             });
@@ -281,7 +325,7 @@ Q.Sprite.extend("Mario",{
     },
     movFin:function(){
         this.changeLevel();
-        Q.audio.stop("music_main.ogg");
+        Q.audio.stop();
         Q.audio.play('music_level_complete.ogg',{debounce:10000});
         this.p.vx=50;
         this.del("platformerControls");
@@ -308,13 +352,26 @@ Q.Sprite.extend("Mario",{
     loadLevel:function(){
         Q.loadTMX("world"+Q.state.get("world")+"level"+Q.state.get("level")+".tmx", function() {
             Q.stage(2).show();    
-            Q.audio.play('music_main.ogg',{ loop:true});
             Q.stageScene("W"+Q.state.get("world")+"L"+Q.state.get("level"));
         });
     }
 });
-
-/*--------------------------------ENEMIGOS------------------------------------*/
+/*---------------------------------PNJ----------------------------------------*/
+Q.Sprite.extend("Princess",{
+    init: function(p) { 
+        this._super(p, { 
+            asset: "princess.png",
+            type: SPRITE_PRINCESS
+            //collisionMask: SPRITE_PLAYER
+        }); 
+        this.add("2d");
+        this.on("bump.left",this,"beso");
+    },
+    beso:function(){
+        
+    }
+});
+/*-------------------------------ENEMIGOS-------------------------------------*/
 //Bloopa
 Q.Sprite.extend("Bloopa",{ 
     init: function(p) { 
@@ -328,7 +385,6 @@ Q.Sprite.extend("Bloopa",{
             type: SPRITE_ENEMY,
             collisionMask: SPRITE_PLAYER | SPRITE_DEFAULT
         }); 
-        //this.add("2d,aiBounce");
         this.add("2d,aiBounce,animation");
         this.play("bloopa");
     },
@@ -477,9 +533,9 @@ Q.Sprite.extend("Piranha",{
 Q.Sprite.extend("Bowser",{ 
     init: function(p) { 
         this._super(p, { 
-            vx:100,
-            sheet: "goomba",
-            sprite: "Goomba",
+            vx:80,
+            sheet: "bowserR",
+            sprite: "Bowser",
             frame: 0,
             die: false,
             muerteCont:0,
@@ -487,21 +543,30 @@ Q.Sprite.extend("Bowser",{
             collisionMask: SPRITE_PLAYER | SPRITE_DEFAULT
         }); 
         this.add("2d,aiBounce,animation");  
-        this.on("bump","matar");
+        this.on("bump.top,bump.down,bump.left,bump.right","matar");
+    },
+    fire:function(){
+        if(this.p.vx>0)
+            Q.stage(1).insert(new Q.Bowsershoot({x:this.p.x,y:this.p.y,vx:100}));
+        else
+            Q.stage(1).insert(new Q.Bowsershoot({x:this.p.x,y:this.p.y,vx:-100}));
     },
     matar:function(collision){
         if(collision.obj.p.type===SPRITE_PLAYER) 
             collision.obj.muerte();
     },
     muerte:function() {
-        
+        this.play("die");
+        this.destroy();
     },
     step:function(){
-        
+        if(this.p.vx>0)
+            this.play("run_right");
+        else
+            this.play("run_left");
     }
 }); 
-
-/*--------------------------------OTROS---------------------------------------*/
+/*------------------------------ELEMENTOS--------------------------------------*/
 //Bandera
 Q.Sprite.extend("Flag",{ 
     init: function(p) { 
@@ -580,6 +645,53 @@ Q.Sprite.extend("Sensor",{
     stomp: function(collision) {
       this.p.vy = 0; // make the player jump
   }
+});
+//Disparo de Bowser
+Q.Sprite.extend("Bowsershoot",{ 
+    init: function(p) { 
+        this._super(p, { 
+            sheet: "bowser_fireball",
+            sprite:"Bowser_fireball",
+            frame: 0,
+            type: SPRITE_BOWSER_SHOOT,
+            gravity:0,
+            vy:0,
+            collisionMask: SPRITE_PLAYER | SPRITE_DEFAULT
+        });
+        this.add("2d,aiBounce,animation");
+        this.play("shoot");
+        this.on("bump.right,bump.left",this,"hit");
+    },
+    hit:function(collision){
+        if(collision.obj.p.type===SPRITE_PLAYER) 
+            collision.obj.muerte();
+        else
+            this.destroy();
+    }
+});
+//Hacha de mario
+Q.Sprite.extend("Axe",{ 
+    init: function(p) { 
+        this._super(p, { 
+            sheet: "axe",
+            sprite:"Axe",
+            frame: 0,
+            type: SPRITE_AXE,
+            gravity:0,
+            vy:0,
+            collisionMask: SPRITE_PLAYER
+        });
+        this.add("2d,aiBounce,animation");
+        this.play("shine");
+        this.on("bump.top",this,"take");
+    },
+    take:function(collision){
+        if(collision.obj.p.type===SPRITE_PLAYER){
+            collision.obj.movFin();
+            this.destroy();
+            Q("Bowser").first().muerte();
+        }
+    }
 });
 /*-------------------------------TEMPORIZADOR---------------------------------*/
 Q.Class.extend("Timer",{
@@ -689,7 +801,7 @@ Q.scene("initScreen",function(stage){
     stage.insert(new Q.UI.Button({asset:"main_title.png",x:Q.width/2, y: (Q.height/3)}));
     stage.insert(new Q.Mario({x:(3*34),y:13*34,limInfMapa:17*34,auto:true,vx:80}));
     //Musica principal del juego
-    Q.audio.play('music_main.ogg',{ loop:true});
+    backMusic.playMusic();
     Q.input.on("confirm",this,function(){
             Q.audio.play('coin.ogg');
             Q.state.set("lives",4);
@@ -799,6 +911,9 @@ Q.scene("W1L1",function(stage) {
                 ["Coin", {x: (167*34)+17, y: (13*34)+17}]
     ];
     Q.state.set("enJuego",true);
+    Q.audio.stop();
+    Q.state.set("worldtype","main");
+    backMusic.playMusic();
     //Cargamos el mapa
     Q.stageTMX("world1level1.tmx",stage);
     //Insertamos todos los sprites del nivel
@@ -834,6 +949,9 @@ Q.scene("W1L2",function(stage) {
         ["Coin", {x: (88*34)+17, y: (14*34)+17}]
     ];
     Q.state.set("enJuego",true);
+    Q.audio.stop();
+    Q.state.set("worldtype","main");
+    backMusic.playMusic();
     //Cargamos el mapa
     Q.stageTMX("world1level2.tmx",stage);
     //Insertamos todos los sprites del nivel
@@ -877,6 +995,9 @@ Q.scene("W1L3",function(stage) {
         ["Coin", {x: (163*34)+17, y: (9*34)+17}]
     ];
     Q.state.set("enJuego",true);
+    Q.audio.stop();
+    Q.state.set("worldtype","main");
+    backMusic.playMusic();
     //Cargamos el mapa
     Q.stageTMX("world1level3.tmx",stage);
     //Insertamos todos los sprites del nivel
@@ -888,15 +1009,15 @@ Q.scene("W1L3",function(stage) {
 });
 //World 1 level 4
 Q.scene("W1L4",function(stage) {
-    var mario= new Q.Mario({x:(15*34)-17,y:15*34,limInfMapa:17*34});
+    var mario= new Q.Mario({x:(154*34)-17,y:15*34,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
         //Hacha
-        //["Axe", {x: (183*34)+17, y: 11*34}],
+        ["Axe", {x: (183*34)+17, y: (11*34)+17}],
         //Bowser
-        //["Bowser", {x: (181*34)+17, y: 12*34}],
+        ["Bowser", {x: (181*34)+17, y: 12*34}],
         //Princesa
-        //["Princess", {x: (190*34)+17, y: 12*34}],
+        ["Princess", {x: (188*34)+17, y: (11*34)}],
         //Enemigos
         //["Bloopa", {x: (58*34)+17, y: 15*34}],
        // ["Bloopa", {x: (63*34)+17, y: 15*34}],
@@ -942,8 +1063,12 @@ Q.scene("W1L4",function(stage) {
         ["Coin", {x: (141*34)+17, y: (4*34)+17}]
     ];
     Q.state.set("enJuego",true);
+    Q.audio.stop();
+    Q.state.set("worldtype","dungeon");
+    backMusic.playMusic();
     //Cargamos el mapa
     Q.stageTMX("world1level4.tmx",stage);
+    
     //Insertamos todos los sprites del nivel
     stage.loadAssets(levelAssets);
     //Insertamos a mario

@@ -3,7 +3,7 @@
  <tileset firstgid="1" name="tiles" tilewidth="34" tileheight="34" tilecount="63" columns="7">
   <image source="../images/tiles.png" width="256" height="324"/>
  </tileset>
- <imagelayer name="Background">
+ <imagelayer name="Background" visible="0">
   <image source="../images/bg_dark.png" width="800" height="800"/>
  </imagelayer>
  <layer name="Decoration" width="200" height="18">
@@ -5182,7 +5182,7 @@
    <tile gid="56"/>
    <tile gid="56"/>
    <tile gid="56"/>
-   <tile gid="56"/>
+   <tile/>
    <tile/>
    <tile/>
    <tile/>
@@ -5381,8 +5381,8 @@
    <tile gid="56"/>
    <tile gid="56"/>
    <tile gid="56"/>
-   <tile gid="56"/>
-   <tile gid="56"/>
+   <tile/>
+   <tile/>
    <tile/>
    <tile/>
    <tile/>
@@ -5580,9 +5580,6 @@
    <tile gid="56"/>
    <tile gid="56"/>
    <tile gid="56"/>
-   <tile gid="56"/>
-   <tile gid="56"/>
-   <tile gid="56"/>
    <tile/>
    <tile/>
    <tile/>
@@ -5607,6 +5604,9 @@
    <tile/>
    <tile/>
    <tile/>
+   <tile/>
+   <tile/>
+   <tile/>
    <tile gid="56"/>
    <tile gid="56"/>
    <tile gid="56"/>
@@ -5982,6 +5982,7 @@
    <tile/>
    <tile/>
    <tile/>
+   <tile gid="56"/>
    <tile/>
    <tile/>
    <tile/>
@@ -6006,7 +6007,6 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile gid="40"/>
    <tile gid="56"/>
    <tile gid="56"/>
    <tile gid="56"/>
@@ -6181,8 +6181,8 @@
    <tile/>
    <tile/>
    <tile/>
-   <tile/>
-   <tile/>
+   <tile gid="56"/>
+   <tile gid="56"/>
    <tile/>
    <tile/>
    <tile/>
