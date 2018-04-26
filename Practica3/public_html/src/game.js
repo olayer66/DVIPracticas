@@ -100,6 +100,22 @@ Q.Class.extend("backMusic", {
         }
     }
 });
+//rebote en eje Y
+Q.component('aiBounce2', {
+    added: function() {
+      this.entity.on("bump.top",this,"goDown");
+      this.entity.on("bump.bottom",this,"goUp");
+    },
+
+    goDown: function(col) {
+      this.entity.p.vy = 100;
+    },
+
+    goUp: function(col) {
+      this.entity.p.vy =-100;
+    }
+  });
+
 //Gestor de niveles
 Q.component("levelManager",{
     changeLevel:function(){
@@ -397,13 +413,13 @@ Q.Sprite.extend("Bloopa",{
             sheet: "bloopa",
             sprite:"Bloopa",
             frame: 0,
-            vx:100,
+            vy:100,
             die: false,
             muerteCont: 0,
             type: SPRITE_ENEMY,
             collisionMask: SPRITE_PLAYER | SPRITE_DEFAULT
         }); 
-        this.add("2d,aiBounce,animation");
+        this.add("2d,aiBounce2,animation");
         this.play("bloopa");
     },
     muerte:function() {
@@ -412,9 +428,7 @@ Q.Sprite.extend("Bloopa",{
       this.play("bloopaDie");
       this.die=true;
       this.muerteCont=0;
-      this.vx=0;
-      this.p.vx=0;
-      this.del("aiBounce");
+      this.del("aiBounce2");
       this.p.type=SPRITE_DEFAULT; //asi si toca  amrio no perdemos.
     },
     step:function(){
@@ -1017,10 +1031,10 @@ Q.scene("W1L4",function(stage) {
         //Princesa
         ["Princess", {x: (188*34)+17, y: (11*34)}],
         //Enemigos
-        //["Bloopa", {x: (58*34)+17, y: 15*34}],
-       // ["Bloopa", {x: (63*34)+17, y: 15*34}],
-        //["Bloopa", {x: (68*34)+17, y: 15*34}],
-       // ["Bloopa", {x: (73*34)+17, y: 15*34}],
+        ["Bloopa", {x: (58*34)+17, y: 15*34}],
+        ["Bloopa", {x: (63*34)+17, y: 15*34}],
+        ["Bloopa", {x: (68*34)+17, y: 15*34}],
+        ["Bloopa", {x: (73*34)+17, y: 15*34}],
         ["GoombaCastle", {x: (33*34)+17, y: 15*34}],
         ["GoombaCastle", {x: (43*34)+17, y: 15*34}],
         ["GoombaCastle", {x: (123*34)+17, y: 15*34}],
