@@ -5337,7 +5337,7 @@
    <tile gid="56"/>
    <tile gid="56"/>
    <tile gid="56"/>
-   <tile gid="56"/>
+   <tile/>
    <tile/>
    <tile gid="56"/>
    <tile gid="56"/>
@@ -5537,7 +5537,7 @@
    <tile gid="56"/>
    <tile gid="56"/>
    <tile gid="56"/>
-   <tile gid="56"/>
+   <tile/>
    <tile/>
    <tile gid="56"/>
    <tile gid="38"/>
