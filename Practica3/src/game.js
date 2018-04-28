@@ -21,7 +21,8 @@ var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
                          upsampleWidth:  420,// Double the pixel density of the
                          upsampleHeight: 320,// game if the w or h is 420x320
                          downsampleWidth: 1024,// Halve the pixel density if resolution
-                         downsampleHeight: 768// is larger than or equal to 1024x768
+                         downsampleHeight: 768,// is larger than or equal to 1024x768
+                         scaleToFit: true
                 })
                 .controls().touch()//Controles tanto para PC como para Disp. moviles
                 .enableSound();//Habilita el uso de audio
@@ -114,6 +115,19 @@ Q.component('aiBounce2', {
       this.entity.p.vy =-100;
     }
   });
+//IA Mario
+Q.component("aiMario",{
+    added: function() {
+      this.entity.on("bump.right,bump.left",this,"goRight");
+    },
+    goRight: function(col) {
+      this.entity.p.vx = col.impact;
+      if(this.entity.p.defaultDirection === 'left')
+          this.entity.p.flip = 'x';
+      else
+          this.entity.p.flip = false;
+    }
+ });
 //Gestor de niveles
 Q.component("levelManager",{
     changeLevel:function(){
@@ -185,7 +199,7 @@ Q.animations('Mario', {
   stand_left: { frames: [14], rate: 1},
   fall_right: { frames: [2], loop: false },
   fall_left: { frames: [14], loop: false },
-  jump_right: { frames: [3,4,5,6], rate: 1/2,loop: false},
+  jump_right: { frames: [3,4,6], rate: 1/2,loop: false},
   jump_left: { frames: [18,19,20,21], rate: 1/2,loop: false}
 });
 //Animacion del Bloopa
@@ -250,9 +264,8 @@ Q.Sprite.extend("Mario",{
         if(collision.obj.p.type===SPRITE_ENEMY) {
            collision.obj.muerte();
            this.p.vy = -300;// make the player jump
-        }else if(collision.obj.p.type===SPRITE_COIN){
+        }else if(collision.obj.p.type===SPRITE_COIN)
             collision.obj.cojer();
-        } 
         else if(collision.obj.isA("TileLayer")){
             this.p.suelo=true;
             this.colMapa(collision,"Down");
@@ -261,34 +274,30 @@ Q.Sprite.extend("Mario",{
     stompR:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
-        else if(collision.obj.p.type===SPRITE_COIN){
+        else if(collision.obj.p.type===SPRITE_COIN)
             collision.obj.cojer();
-        }else if(collision.obj.isA("TileLayer"))
+        else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Right");
-        
     },
     stompL:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
-        else if(collision.obj.p.type===SPRITE_COIN){
+        else if(collision.obj.p.type===SPRITE_COIN)
             collision.obj.cojer();
-        } 
         else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"Left");
     },
     stompT:function(collision) {
         if(collision.obj.p.type===SPRITE_ENEMY) 
             this.muerte();
-        else if(collision.obj.p.type===SPRITE_COIN){
+        else if(collision.obj.p.type===SPRITE_COIN)
             collision.obj.cojer();
-        } 
         else if(collision.obj.isA("TileLayer"))
             this.colMapa(collision,"top");
     },
     step:function(dt){
-        
+        //Control del Timer
         if(!this.p.auto){
-            //Control del Timer
             this.Timer.step(dt);
             //Comprobamos el tiempo
             if(this.Timer.tiempoRest()<100 && !this.p.prisa)
@@ -308,12 +317,10 @@ Q.Sprite.extend("Mario",{
             this.p.gravity=1;
         }
         //Agacharse
-        if(Q.inputs['down'] && !this.p.agachado) {
+        if(Q.inputs['down'] && !this.p.agachado)
             this.p.agachado=true;
-        }
-        if(!Q.inputs['down']){
+        if(!Q.inputs['down'])
             this.p.agachado=false;
-        }
         //animacion movimiento
         if(this.p.vx > 0) {
             if(this.p.suelo===true)
@@ -351,8 +358,7 @@ Q.Sprite.extend("Mario",{
         }else{
             Q.audio.play('music_die.ogg');
             this.levelManager.nextLevel();
-        }
-        
+        }  
     },
     colMapa:function(collision,tipo){
         if(collision.tile === 37 && tipo==="top") { //caja llena
@@ -365,8 +371,7 @@ Q.Sprite.extend("Mario",{
         }else if(collision.tile === 38 ||collision.tile === 45) { //Mastil de la bandera     
             //Eliminamos la colision contra el mastil (tile = 0 es empty)
             this.p.bandera=true;
-            var bandera=Q("Flag");
-            bandera.each(function() {
+            Q("Flag").each(function() {
                 this.p.goDown=true;
             });
             Q.state.inc("score",Q.state.get("valFinNivel"));
@@ -378,13 +383,15 @@ Q.Sprite.extend("Mario",{
             collision.obj.setTile(collision.tileX,10, 0);
             collision.obj.setTile(collision.tileX,9, 0);
             collision.obj.setTile(collision.tileX,8, 0);
-            collision.obj.setTile(collision.tileX,7, 0);    
-            this.movFin();
-            
+            collision.obj.setTile(collision.tileX,7, 0);
+            this.p.vx=80;
+            if(!this.p.auto)
+                this.movFin(); 
         }else if(collision.tile === 39 && this.p.bandera) { //puerta castillo
-           this.levelManager.nextLevel();
+            this.levelManager.changeLevel();
+            this.levelManager.nextLevel();
         }else if(collision.tile === 39 && this.p.auto) { //puerta castillo nextLevel
-            this.del("aibounce");
+            this.del("aiBounce");
             this.levelManager.loadLevel();
         }else if((collision.tile === 49 || collision.tile === 50) && tipo==="Down" && this.p.agachado){//Boca tuberia vertical
             var bandera=Q("Sensor");
@@ -408,12 +415,11 @@ Q.Sprite.extend("Mario",{
             this.muerte();
     },
     movFin:function(){
-        this.levelManager.changeLevel();
         Q.audio.stop();
         Q.audio.play('music_level_complete.ogg',{debounce:10000});
-        this.p.vx=50;
         this.del("platformerControls");
-        this.add("aiBounce");
+        this.add("aiMario");
+        this.p.vx=80;
     },
     goDown:function(destX,destY){
         Q.audio.play('down_pipe.ogg',{debounce:100});
@@ -440,8 +446,10 @@ Q.Sprite.extend("Princess",{
         this.on("bump.left",this,"beso");
     },
     beso:function(collision){
-        if(collision.obj.p.type===SPRITE_PLAYER)
+        if(collision.obj.p.type===SPRITE_PLAYER){
+            this.levelManager.changeLevel();
             this.levelManager.nextLevel();
+        }
     }
 });
 /*-------------------------------ENEMIGOS-------------------------------------*/
@@ -453,6 +461,7 @@ Q.Sprite.extend("Bloopa",{
             sprite:"Bloopa",
             frame: 0,
             vy:100,
+            gravity:0,
             die: false,
             muerteCont: 0,
             type: SPRITE_ENEMY,
@@ -581,10 +590,12 @@ Q.Sprite.extend("Flag",{
                 this.p.y+=5;
         }   
     },
-    captura:function(){
+    captura:function(collision){
         this.del("2d");
         this.p.goDown=true;
+        collision.obj.p.bandera=true;
         Q.state.inc("score",Q.state.get("valBandera"));
+        collision.obj.movFin();
     }
 });
 //Monedas
@@ -738,7 +749,7 @@ Q.UI.Text.extend("Coins",{
 Q.UI.Text.extend("Timer",{
     init:function(p) {
         this._super({
-            label: "Tiempo\n 000",    
+            label: "Tiempo\n 300",    
             x: 700,
             y: 0,
             color:"#ffffff"
@@ -837,21 +848,21 @@ Q.scene('pauseMessage',function(stage) {
 */
 //World 1 level 1
 Q.scene("W1L1",function(stage) {
-    var mario= new Q.Mario({x:(15*34)-17,y:15*34,limInfMapa:17*34});
+    var mario= new Q.Mario({x:(14*34)+17,y:(15*34)+17,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
         ["Flag", {x:(120*34)+1, y: (8*34)+17,limInf:(14*34)+14}],
         //Sensor de la tuberia a la cueva
         ["Sensor", {orX:53*34,orY:12*34,destX:(160*34)-17,destY:9*34}],
         //Enemigos
-        ["Bloopa", {x: (68*34)+17, y: 15*34}],
-        ["Goomba", {x: (30*34)+17, y: 15*34}],
-        ["Goomba", {x: (50*34)+17, y: 15*34}],
-        ["Goomba", {x: (51*34)+17, y: 15*34}],
-        ["Goomba", {x: (54*34)+17, y: 15*34}],
-        ["Goomba", {x: (55*34)+17, y: 15*34}],
-        ["Goomba", {x: (84*34)+17, y: 15*34}],
-        ["Goomba", {x: (85*34)+17, y: 15*34}],
+        ["Bloopa", {x: (68*34)+17, y: (13*34)+17}],
+        ["Goomba", {x: (30*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (50*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (51*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (54*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (55*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (84*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (85*34)+17, y: (15*34)+17}],
         //Cueva del tesoro
         //Grupo arriba
                 //fila 1
@@ -997,13 +1008,13 @@ Q.scene("W1L3",function(stage) {
 });
 //World 1 level 4
 Q.scene("W1L4",function(stage) {
-    var mario= new Q.Mario({x:(154*34)-17,y:15*34,limInfMapa:17*34});
+    var mario= new Q.Mario({x:(15*34)-17,y:15*34,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
         //Hacha
-        ["Axe", {x: (183*34)+17, y: (11*34)+17}],
+        ["Axe", {x: (183*34)+17, y: (10*34)+17}],
         //Bowser
-        ["Bowser", {x: (181*34)+17, y: 12*34}],
+        ["Bowser", {x: (180*34)+17, y: 12*34}],
         //Princesa
         ["Princess", {x: (188*34)+17, y: (11*34)}],
         //Enemigos
