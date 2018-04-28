@@ -147,7 +147,6 @@ Q.component("levelManager",{
         });
     },
     nextLevel:function(){
-        this.changeLevel();
         if(Q.state.get("world")>Q.state.get("maxWorld")){
             this.winScreen();
         }else{
@@ -388,7 +387,8 @@ Q.Sprite.extend("Mario",{
             if(!this.p.auto)
                 this.movFin(); 
         }else if(collision.tile === 39 && this.p.bandera) { //puerta castillo
-           this.levelManager.nextLevel();
+            this.levelManager.changeLevel();
+            this.levelManager.nextLevel();
         }else if(collision.tile === 39 && this.p.auto) { //puerta castillo nextLevel
             this.del("aibounce");
             this.levelManager.loadLevel();
@@ -458,6 +458,7 @@ Q.Sprite.extend("Bloopa",{
             sprite:"Bloopa",
             frame: 0,
             vy:100,
+            gravity:0,
             die: false,
             muerteCont: 0,
             type: SPRITE_ENEMY,
@@ -844,21 +845,21 @@ Q.scene('pauseMessage',function(stage) {
 */
 //World 1 level 1
 Q.scene("W1L1",function(stage) {
-    var mario= new Q.Mario({x:(110*34)-17,y:7*34,limInfMapa:17*34});
+    var mario= new Q.Mario({x:(14*34)+17,y:(15*34)+17,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
         ["Flag", {x:(120*34)+1, y: (8*34)+17,limInf:(14*34)+14}],
         //Sensor de la tuberia a la cueva
         ["Sensor", {orX:53*34,orY:12*34,destX:(160*34)-17,destY:9*34}],
         //Enemigos
-        ["Bloopa", {x: (68*34)+17, y: 15*34}],
-        ["Goomba", {x: (30*34)+17, y: 15*34}],
-        ["Goomba", {x: (50*34)+17, y: 15*34}],
-        ["Goomba", {x: (51*34)+17, y: 15*34}],
-        ["Goomba", {x: (54*34)+17, y: 15*34}],
-        ["Goomba", {x: (55*34)+17, y: 15*34}],
-        ["Goomba", {x: (84*34)+17, y: 15*34}],
-        ["Goomba", {x: (85*34)+17, y: 15*34}],
+        ["Bloopa", {x: (68*34)+17, y: (13*34)+17}],
+        ["Goomba", {x: (30*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (50*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (51*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (54*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (55*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (84*34)+17, y: (15*34)+17}],
+        ["Goomba", {x: (85*34)+17, y: (15*34)+17}],
         //Cueva del tesoro
         //Grupo arriba
                 //fila 1
