@@ -390,7 +390,7 @@ Q.Sprite.extend("Mario",{
             this.levelManager.changeLevel();
             this.levelManager.nextLevel();
         }else if(collision.tile === 39 && this.p.auto) { //puerta castillo nextLevel
-            this.del("aibounce");
+            this.del("aiMario");
             this.levelManager.loadLevel();
         }else if((collision.tile === 49 || collision.tile === 50) && tipo==="Down" && this.p.agachado){//Boca tuberia vertical
             var bandera=Q("Sensor");
