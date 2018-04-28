@@ -250,7 +250,7 @@ Q.Sprite.extend("Mario",{
         this.add("Timer");
         if(this.p.auto!==null){
             if(this.p.auto)
-                this.add("aiMario");
+                this.add("aiBounce");
             else
                 this.add("platformerControls");
         }
@@ -390,7 +390,7 @@ Q.Sprite.extend("Mario",{
             this.levelManager.changeLevel();
             this.levelManager.nextLevel();
         }else if(collision.tile === 39 && this.p.auto) { //puerta castillo nextLevel
-            this.del("aiMario");
+            this.del("aiBounce");
             this.levelManager.loadLevel();
         }else if((collision.tile === 49 || collision.tile === 50) && tipo==="Down" && this.p.agachado){//Boca tuberia vertical
             var bandera=Q("Sensor");
@@ -445,8 +445,10 @@ Q.Sprite.extend("Princess",{
         this.on("bump.left",this,"beso");
     },
     beso:function(collision){
-        if(collision.obj.p.type===SPRITE_PLAYER)
+        if(collision.obj.p.type===SPRITE_PLAYER){
+            this.levelManager.changeLevel();
             this.levelManager.nextLevel();
+        }
     }
 });
 /*-------------------------------ENEMIGOS-------------------------------------*/
@@ -1005,13 +1007,13 @@ Q.scene("W1L3",function(stage) {
 });
 //World 1 level 4
 Q.scene("W1L4",function(stage) {
-    var mario= new Q.Mario({x:(154*34)-17,y:15*34,limInfMapa:17*34});
+    var mario= new Q.Mario({x:(15*34)-17,y:15*34,limInfMapa:17*34});
     //Sprites a insertar en el mapa
     var levelAssets = [
         //Hacha
-        ["Axe", {x: (183*34)+17, y: (11*34)+17}],
+        ["Axe", {x: (183*34)+17, y: (10*34)+17}],
         //Bowser
-        ["Bowser", {x: (181*34)+17, y: 12*34}],
+        ["Bowser", {x: (180*34)+17, y: 12*34}],
         //Princesa
         ["Princess", {x: (188*34)+17, y: (11*34)}],
         //Enemigos
