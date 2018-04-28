@@ -199,7 +199,7 @@ Q.animations('Mario', {
   stand_left: { frames: [14], rate: 1},
   fall_right: { frames: [2], loop: false },
   fall_left: { frames: [14], loop: false },
-  jump_right: { frames: [3,4,5,6], rate: 1/2,loop: false},
+  jump_right: { frames: [3,4,6], rate: 1/2,loop: false},
   jump_left: { frames: [18,19,20,21], rate: 1/2,loop: false}
 });
 //Animacion del Bloopa
