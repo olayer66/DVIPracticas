@@ -21,7 +21,8 @@ var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
                          upsampleWidth:  420,// Double the pixel density of the
                          upsampleHeight: 320,// game if the w or h is 420x320
                          downsampleWidth: 1024,// Halve the pixel density if resolution
-                         downsampleHeight: 768// is larger than or equal to 1024x768
+                         downsampleHeight: 768,// is larger than or equal to 1024x768
+                         scaleToFit: true
                 })
                 .controls().touch()//Controles tanto para PC como para Disp. moviles
                 .enableSound();//Habilita el uso de audio
@@ -748,7 +749,7 @@ Q.UI.Text.extend("Coins",{
 Q.UI.Text.extend("Timer",{
     init:function(p) {
         this._super({
-            label: "Tiempo\n 000",    
+            label: "Tiempo\n 300",    
             x: 700,
             y: 0,
             color:"#ffffff"
