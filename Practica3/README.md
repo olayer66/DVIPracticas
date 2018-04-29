@@ -6,6 +6,7 @@ Mecanicas adicionales implementadas:
     *Se ha añadido a Bowser en el nivel final del mundo.
  -Nuevas mecanicas:
     *Pausado de la partida mediante la tecla P.
+    *Animacion de la muerte de mario mediante tween.
     *Bowser dispara bolas de fuego.
     *Temporizador de cuenta atras de 300 segundos a los 100 te avisa y a 0 mueres.
     *Contador de monedas, cada 100 monedas gana una vida.
