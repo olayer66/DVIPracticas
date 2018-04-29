@@ -14,17 +14,16 @@ var SPRITE_BOWSER_SHOOT=1024;
 var backMusic;
 /* global Quintus */
 var Q = window.Q = Quintus({ development:true,audioSupported: ['ogg','mp3'] })
-                .include("Sprites, Scenes, Input, 2D, Anim, Touch, UI,TMX,Audio")//Librerias del quintus cargadas
-                .setup({ maximize: "touch",
+                .include("Sprites, Scenes, Input, 2D, Anim,UI,TMX,Audio")//Librerias del quintus cargadas
+                .setup({
                          width:   800,// Set the default width to 800 pixels
                          height:  600,// Set the default height to 600 pixels
                          upsampleWidth:  420,// Double the pixel density of the
                          upsampleHeight: 320,// game if the w or h is 420x320
                          downsampleWidth: 1024,// Halve the pixel density if resolution
-                         downsampleHeight: 768,// is larger than or equal to 1024x768
-                         scaleToFit: true
+                         downsampleHeight: 768// is larger than or equal to 1024x768
                 })
-                .controls().touch()//Controles tanto para PC como para Disp. moviles
+                .controls()//Controles para PC
                 .enableSound();//Habilita el uso de audio
 //*-------------------------CARGA DE CONTENIDO--------------------------------*/
 //Imagenes
@@ -60,7 +59,9 @@ Q.preload(function(){
 /*-----------------------------COMPONENTES------------------------------------*/
 //Asignacion de teclas
 Q.input.keyboardControls({
-    P: "pausa"
+    P: "pausa",
+    X:"",
+    SPACE:"up"
 });
 //Modo de pausa del juego
 Q.input.on("pausa",function() {
@@ -200,7 +201,8 @@ Q.animations('Mario', {
   fall_right: { frames: [2], loop: false },
   fall_left: { frames: [14], loop: false },
   jump_right: { frames: [3,4,6], rate: 1/2,loop: false},
-  jump_left: { frames: [18,19,20,21], rate: 1/2,loop: false}
+  jump_left: { frames: [18,19,20,21], rate: 1/2,loop: false},
+  die:{ frames: [12], rate: 1/8}
 });
 //Animacion del Bloopa
 Q.animations('Bloopa', {
@@ -244,9 +246,10 @@ Q.Sprite.extend("Mario",{
             bandera:false,
             auto:false,
             prisa:false,
+            muerto:false,
             type:SPRITE_PLAYER
         });
-        this.add("2d,animation");
+        this.add("2d,animation,tween");
         this.add("levelManager");
         this.add("Timer");
         if(this.p.auto!==null){
@@ -349,16 +352,30 @@ Q.Sprite.extend("Mario",{
         }
     },
     muerte:function(){
-        Q.audio.stop();
-        this.destroy();
-        Q.state.dec("lives",1);
-        if(Q.state.get("lives")===0){
-            Q.audio.play("music_game_over.ogg");
-            this.levelManager.loseScreen();
-        }else{
-            Q.audio.play('music_die.ogg');
-            this.levelManager.nextLevel();
-        }  
+        this.p.sheet="marioDie";
+        if(!this.p.muerto){
+            this.p.muerto=true;
+            this.del("2d");
+            Q.audio.stop();
+            Q.state.dec("lives",1);
+            if(Q.state.get("lives")===0){
+                Q.audio.play("music_game_over.ogg");
+                this.animate({y: this.p.y-50},0.5).chain({y: this.p.y+50},0.5,{
+                    callback:function(){
+                        this.destroy();
+                        this.levelManager.loseScreen();
+                    }
+                });     
+            }else{
+                Q.audio.play('music_die.ogg');
+                this.animate({y: this.p.y-50},0.3,Q.Easing.Linear).chain({y: this.p.y+100},0.5,{
+                    callback:function(){
+                        this.destroy();
+                        this.levelManager.nextLevel();
+                    }
+                });     
+            }  
+        }
     },
     colMapa:function(collision,tipo){
         if(collision.tile === 37 && tipo==="top") { //caja llena
